@@ -1,0 +1,78 @@
+
+# fa7fbab9-b195-407a-af32-6ecf6ddf9885
+
+###
+GET http://localhost:9000/costs
+
+###
+# @name createCost
+POST http://localhost:9000/costs
+Content-Type: application/json
+
+{
+    "project_id": "fa7fbab9-b195-407a-af32-6ecf6ddf9885",
+    "cost_type": "one_time",
+    "description": "Mão de obra do PO",
+    "comment": "estimativa do PO",
+    "amount": 100,
+    "currency": "BRL",
+    "installments": [
+        {
+            "year": 2021,
+            "month": 1,            
+            "amount": 60
+        },
+        {
+            "year": 2021,
+            "month": 12,            
+            "amount": 40
+        }
+    ]
+}
+ 
+###
+
+@costId = {{ createCost.response.body.cost_id }}
+
+###
+# GET http://localhost:3000/events/{{ eventId }}
+
+# ###
+# PATCH http://localhost:3000/events/{{ eventId }}
+# Content-Type: application/json
+
+# {
+#     "name": "New Event",
+#     "description": "This is a new event",
+#     "date": "2017-01-01T00:00:00",
+#     "price": 100
+# }
+
+# ###
+# DELETE http://localhost:3000/events/{{ eventId }}
+
+# ###
+# GET http://localhost:3000/events/{{eventId}}/spots
+
+# ###
+# # @name createSpot
+# POST http://localhost:3000/events/{{eventId}}/spots
+# Content-Type: application/json
+
+# {
+#   "name": "A3"
+# }
+
+# ###
+# @spotName = {{ createSpot.response.body.name }}
+
+# ###
+# POST http://localhost:3000/events/{{eventId}}/reserve
+# Content-Type: application/json
+# X-Api-Token: 1234
+
+# {
+#   "spots": ["{{ spotName }}"],
+#   "ticket_kind": "full",
+#   "email": "test@test.com"
+# }

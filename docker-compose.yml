@@ -1,0 +1,62 @@
+volumes:
+  postgres-data:
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    volumes:
+      - ..:/workspaces:cached
+    ports:
+      - 9000:9000
+
+    # Overrides default command so things don't shut down after the process ends.
+    command: sleep infinity
+
+    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally.
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  db:
+    image: postgres:latest
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_HOSTNAME: localhost
+    # env_file:
+    # Ensure that the variables in .env match the same variables in devcontainer.json
+    # - .env
+
+    # Add "forwardPorts": ["5432"] to **devcontainer.json** to forward PostgreSQL locally.
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+    # Add "forwardPorts": ["8080"] to **devcontainer.json** to forward Adminer locally.
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    ports:
+      - 9080:80
+    environment:
+      PGADMIN_DEFAULT_EMAIL: user@domain.com
+      PGADMIN_DEFAULT_PASSWORD: SuperSecret
+
+    # env_file:
+    # Ensure that the variables in .env match the same variables in devcontainer.json
+    # - .env
+
+    # Add "forwardPorts": ["9080"] to **devcontainer.json** to forward pgAdmin locally.
