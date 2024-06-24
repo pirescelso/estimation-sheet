@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -9,43 +10,32 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/celsopires1999/estimation/internal/infra/db"
+	"github.com/celsopires1999/estimation/configs"
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	httpHandler "github.com/celsopires1999/estimation/internal/infra/http"
-	"github.com/celsopires1999/estimation/internal/infra/repository"
-	"github.com/celsopires1999/estimation/internal/usecase"
-	"github.com/jackc/pgx/v5"
 )
 
 func main() {
-
 	ctx := context.Background()
 
-	// urlExample := "postgres://username:password@localhost:5432/database_name"
-	conn, err := pgx.Connect(ctx, "postgres://postgres:postgres@db:5432/postgres?sslmode=disable")
-	if err != nil {
-		log.Fatalf("Unable to connect to database: %v\n", err)
-	}
-	defer conn.Close(context.Background())
+	configs := configs.LoadConfig(".", "")
+	dbpool, err := pgxpool.New(ctx, configs.DBConn)
 
-	if err := conn.Ping(ctx); err != nil {
+	if err != nil {
+		log.Fatalf("Unable to create connection pool: %v\n", err)
+	}
+	defer dbpool.Close()
+
+	if err := dbpool.Ping(ctx); err != nil {
 		log.Fatalf("Unable to ping database: %v\n", err)
 	}
 
-	txm := db.NewTransactionManager(ctx, conn)
-	txm.Register("CostRepo", func(q *db.Queries) any {
-		return repository.NewCostRepositoryPostgres(q)
-	})
-
-	costUsecase := usecase.NewCreateCostUseCase(txm)
-
-	costsHandler := httpHandler.NewCostsHandler(costUsecase)
-
-	r := http.NewServeMux()
-	r.HandleFunc("POST /costs", costsHandler.CreateCost)
+	v1 := httpHandler.Handler(ctx, dbpool)
 
 	server := &http.Server{
-		Addr:    ":9000",
-		Handler: r,
+		Addr:    fmt.Sprintf(":%s", configs.Port),
+		Handler: v1,
 	}
 
 	// Channel to listen for operating system signals
@@ -67,8 +57,7 @@ func main() {
 		close(idleConnsClosed)
 	}()
 
-	// Starting the HTTP server
-	log.Println("HTTP server running on port 9000")
+	log.Println("HTTP server running on port", configs.Port)
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatalf("Error starting HTTP server: %v\n", err)
 	}

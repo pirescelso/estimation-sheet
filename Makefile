@@ -1,4 +1,6 @@
-DB_URL=postgres://postgres:postgres@db:5432/postgres?sslmode=disable
+DB_URL=postgres://postgres:postgres@db:5432/postgres?sslmode=disable&search_path=estimation
+# DB_URL=postgres://test:test@db:5432/test?sslmode=disable&search_path=estimation
+# go test -v -cover -p 1 -count 1 -run ^TestIntegration ./...
 
 migrateup:
 	migrate -path=sql/migrations -database "$(DB_URL)" -verbose up
@@ -6,10 +8,16 @@ migrateup:
 migratedown:
 	migrate -path=sql/migrations -database "$(DB_URL)" -verbose drop
 
-test:
-	go test -cover ./...
+test-unit:
+	go test -v -race -cover -count 1 -run ^TestUnit ./...
+
+test-integration:
+	go test -v -cover -p 1 -count 1 -run ^TestIntegration ./...
 
 test-clean:
 	go clean --testcache
 
-.PHONY:  migrateup migratedown test test-clean
+run:
+	go run ./cmd/estimation/main.go
+
+.PHONY:  migrateup migratedown test-unit test-integration test-clean run

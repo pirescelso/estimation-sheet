@@ -1,29 +1,82 @@
 START TRANSACTION;
 
-CREATE TABLE IF NOT EXISTS projects (
-    project_id VARCHAR(36) PRIMARY KEY,
-    description VARCHAR(255) NOT NULL,
+CREATE TABLE IF NOT EXISTS users (
+    user_id VARCHAR(36) PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    user_name VARCHAR(8) NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    user_type VARCHAR(10) NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS baselines (
+    baseline_id VARCHAR(36) PRIMARY KEY,
+    code VARCHAR(20) NOT NULL UNIQUE,
+    title VARCHAR(50) NOT NULL,
+    description TEXT NULL,
     start_date DATE NOT NULL,
+    duration INT NOT NULL,
+    manager_id VARCHAR(36) NOT NULL REFERENCES users (user_id),
+    estimator_id VARCHAR(36) NOT NULL REFERENCES users (user_id),
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS costs (
     cost_id VARCHAR(36) PRIMARY KEY,
-    project_id VARCHAR(36) NOT NULL REFERENCES projects (project_id),
+    baseline_id VARCHAR(36) NOT NULL REFERENCES baselines (baseline_id),
     cost_type VARCHAR(10) NOT NULL,
     description VARCHAR(255) NOT NULL,
     comment VARCHAR(255),
     amount FLOAT8 NOT NULL,
     currency VARCHAR(10) NOT NULL,
+    tax FLOAT8 NOT NULL,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS installments (
-    installment_id VARCHAR(36) PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS cost_allocations (
+    cost_allocation_id VARCHAR(36) PRIMARY KEY,
     cost_id VARCHAR(36) NOT NULL REFERENCES costs (cost_id),
-    payment_date DATE NOT NULL,
+    allocation_date DATE NOT NULL,
+    amount FLOAT8 NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS plans (
+    plan_id VARCHAR(36) PRIMARY KEY,
+    code VARCHAR(10) NOT NULL UNIQUE,
+    name VARCHAR(50) NOT NULL,
+    assumptions JSONB NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS portfolios (
+    portfolio_id VARCHAR(36) PRIMARY KEY,
+    baseline_id VARCHAR(36) NOT NULL REFERENCES baselines (baseline_id),
+    plan_id VARCHAR(36) NOT NULL REFERENCES plans (plan_id),
+    start_date DATE NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP,
+    UNIQUE (baseline_id, plan_id)
+);
+
+CREATE TABLE IF NOT EXISTS budgets (
+    budget_id VARCHAR(36) PRIMARY KEY,
+    portfolio_id VARCHAR(36) NOT NULL REFERENCES portfolios (portfolio_id),
+    cost_id VARCHAR(36) NOT NULL REFERENCES costs (cost_id),
+    amount FLOAT8 NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS budget_allocations (
+    budget_allocation_id VARCHAR(36) PRIMARY KEY,
+    budget_id VARCHAR(36) NOT NULL REFERENCES budgets (budget_id),
+    allocation_date DATE NOT NULL,
     amount FLOAT8 NOT NULL,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP

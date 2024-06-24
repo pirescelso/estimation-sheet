@@ -1,70 +1,365 @@
 
 # fa7fbab9-b195-407a-af32-6ecf6ddf9885
-
 ###
-GET http://localhost:9000/costs
-
-###
-# @name createCost
-POST http://localhost:9000/costs
+# @name createManager
+POST http://localhost:9000/api/v1/users
 Content-Type: application/json
 
 {
-    "project_id": "fa7fbab9-b195-407a-af32-6ecf6ddf9885",
+    "email": "john.doe@userland.com",
+    "user_name": "john1234",
+    "name": "John Doe",
+    "user_type": "manager"
+}
+
+###
+# @name createEstimator
+POST http://localhost:9000/api/v1/users
+Content-Type: application/json
+
+{
+    "email": "marie.doe1110@userland.com",
+    "user_name": "marie123",
+    "name": "Marie Doe",
+    "user_type": "estimator"
+}
+
+### 
+@managerId = {{ createManager.response.body.user_id }}
+@estimatorId = {{ createEstimator.response.body.user_id }}
+# @name createBaseline
+
+POST http://localhost:9000/api/v1/baselines
+Content-Type: application/json
+
+{
+    "code": "RIT123456789",
+    "title": "Logistics Cost & Time Management",
+    "description": "This project will streamline our internal processes and increase overall efficiency",
+    "start_month": 1,
+    "start_year": 2024,
+    "duration": 12,
+    "manager_id": "{{ managerId }}",
+    "estimator_id": "{{ estimatorId }}"
+}
+
+
+@baselineId = {{ createBaseline.response.body.baseline_id }}
+
+###
+# @name createBaselineWithError
+POST http://localhost:9000/api/v1/baselines
+Content-Type: application/json
+
+{
+    "code": "ERROR",
+    "title": "Logistics Cost & Time Management",
+    "description": "This project will streamline our internal processes and increase overall efficiency",
+    "start_month": 1,
+    "start_year": 2024,
+    "duration": 12,
+    "manager_id": "{{ managerId }}",
+    "estimator_id": "123"
+}
+
+###
+# @name updateBaseline
+PATCH http://localhost:9000/api/v1/baselines/{{ baselineId }}
+Content-Type: application/json
+
+{
+    "duration": 12
+}
+
+
+###
+# @name createCostPO
+POST http://localhost:9000/api/v1/costs
+Content-Type: application/json
+
+{
+    "baseline_id": "{{ baselineId }}",
     "cost_type": "one_time",
     "description": "Mão de obra do PO",
     "comment": "estimativa do PO",
-    "amount": 100,
+    "amount": 180000,
     "currency": "BRL",
-    "installments": [
+    "tax": 0.00,
+    "cost_allocations": [
         {
-            "year": 2021,
+            "year": 2024,
             "month": 1,            
-            "amount": 60
+            "amount": 30000
         },
         {
-            "year": 2021,
-            "month": 12,            
-            "amount": 40
+            "year": 2024,
+            "month": 2,            
+            "amount": 30000
+        },
+        {
+            "year": 2024,
+            "month": 3,            
+            "amount": 30000
+        },
+        {
+            "year": 2024,
+            "month": 4,            
+            "amount": 30000
+        },
+                {
+            "year": 2024,
+            "month": 5,            
+            "amount": 30000
+        },
+                {
+            "year": 2024,
+            "month": 6,            
+            "amount": 30000
         }
     ]
 }
  
 ###
+# @name createCostConsulting
+POST http://localhost:9000/api/v1/costs
+Content-Type: application/json
 
-@costId = {{ createCost.response.body.cost_id }}
+{
+    "baseline_id": "{{ baselineId }}",
+    "cost_type": "one_time",
+    "description": "External Consulting",
+    "comment": "estimativa de consultoria externa",
+    "amount": 80000,
+    "currency": "EUR",
+    "tax": 23.10,
+    "cost_allocations": [
+        {
+            "year": 2024,
+            "month": 4,            
+            "amount": 30000
+        },
+        {
+            "year": 2024,
+            "month": 6,            
+            "amount": 50000
+        }
+    ]
+}
+ 
+###
+# @name updateCostConsulting
+PATCH http://localhost:9000/api/v1/costs/{{ createCostConsulting.response.body.cost_id }}
+Content-Type: application/json
+
+{
+    "comment": "estimativa de consultoria externa atualizada",
+    "tax": 23.00,
+    "currency": "USD",
+    "cost_allocations": [
+    {
+      "year": 2024,
+      "month": 8,
+      "amount": 30000
+    },
+    {
+      "year": 2024,
+      "month": 7,
+      "amount": 50000
+    }
+  ]
+}
+###
+# @name deleteCostConsulting
+DELETE http://localhost:9000/api/v1/costs/{{ createCostConsulting.response.body.cost_id }}
 
 ###
-# GET http://localhost:3000/events/{{ eventId }}
+# @name createPlanBP
+POST http://localhost:9000/api/v1/plans
+Content-Type: application/json
 
-# ###
-# PATCH http://localhost:3000/events/{{ eventId }}
-# Content-Type: application/json
+{
+    "code": "BP 2025",
+    "name": "Business Plan 2025",
+    "assumptions": [
+        {
+            "year": 2024,
+            "inflation": 4.00,
+            "currencies": [
+                {
+                    "currency": "USD",
+                    "exchange": 4.50
+                },
+                {
+                    "currency": "EUR",
+                    "exchange": 5.50
+                }
+            ]
+        },
+        {
+            "year": 2025,
+            "inflation": 5.20,
+            "currencies": [
+                {
+                    "currency": "USD",
+                    "exchange": 5.00
+                },
+                {
+                    "currency": "EUR",
+                    "exchange": 6.00
+                }
+            ]
+        },
+        {
+            "year": 2026,
+            "inflation": 5.26,
+            "currencies": [
+                {
+                    "currency": "USD",
+                    "exchange": 5.55
+                },
+                {
+                    "currency": "EUR",
+                    "exchange": 6.66
+                }
+            ]
+        },
+        {
+            "year": 2027,
+            "inflation": 5.30,
+            "currencies": [
+                {
+                    "currency": "USD",
+                    "exchange": 5.77
+                },
+                {
+                    "currency": "EUR",
+                    "exchange": 6.88
+                }
+            ]
+        }
+    ]
+}
 
-# {
-#     "name": "New Event",
-#     "description": "This is a new event",
-#     "date": "2017-01-01T00:00:00",
-#     "price": 100
-# }
+###
+# @name createPlanFC03
+POST http://localhost:9000/api/v1/plans
+Content-Type: application/json
 
-# ###
-# DELETE http://localhost:3000/events/{{ eventId }}
+{
+    "code": "FC 03 2025",
+    "name": "Forecast 03 2025",
+    "assumptions": [
+        {
+            "year": 2024,
+            "inflation": 4.00,
+            "currencies": [
+                {
+                    "currency": "USD",
+                    "exchange": 4.50
+                },
+                {
+                    "currency": "EUR",
+                    "exchange": 5.50
+                }
+            ]
+        },
+        {
+            "year": 2025,
+            "inflation": 5.20,
+            "currencies": [
+                {
+                    "currency": "USD",
+                    "exchange": 5.00
+                },
+                {
+                    "currency": "EUR",
+                    "exchange": 6.00
+                }
+            ]
+        },
+        {
+            "year": 2026,
+            "inflation": 5.26,
+            "currencies": [
+                {
+                    "currency": "USD",
+                    "exchange": 5.55
+                },
+                {
+                    "currency": "EUR",
+                    "exchange": 6.66
+                }
+            ]
+        },
+        {
+            "year": 2027,
+            "inflation": 5.30,
+            "currencies": [
+                {
+                    "currency": "USD",
+                    "exchange": 5.77
+                },
+                {
+                    "currency": "EUR",
+                    "exchange": 6.88
+                }
+            ]
+        }
+    ]
+}
 
-# ###
-# GET http://localhost:3000/events/{{eventId}}/spots
+@planIdBP = {{ createPlanBP.response.body.plan_id }}
+@planIdFC03 = {{ createPlanFC03.response.body.plan_id }}
 
-# ###
-# # @name createSpot
-# POST http://localhost:3000/events/{{eventId}}/spots
-# Content-Type: application/json
+###
+# @name createPortfolioBP
+POST http://localhost:9000/api/v1/portfolios
+Content-Type: application/json
 
-# {
-#   "name": "A3"
-# }
+{
+    "baseline_id": "{{ baselineId }}",
+    "plan_id": "{{ planIdBP }}",
+    "shift_months": 11
+}
 
-# ###
-# @spotName = {{ createSpot.response.body.name }}
+###
+# @name createPortfolioFC03
+POST http://localhost:9000/api/v1/portfolios
+Content-Type: application/json
+
+{
+    "baseline_id": "{{ baselineId }}",
+    "plan_id": "{{ planIdFC03 }}",
+    "shift_months": 18
+}
+
+
+@portfolioIdBP = {{ createPortfolioBP.response.body.portfolio_id }}
+@portfolioIdFC03 = {{ createPortfolioFC03.response.body.portfolio_id }}
+
+###
+# @name getPortfolioBP
+GET http://localhost:9000/api/v1/portfolios/{{ portfolioIdBP }}
+
+###
+# @name getPortfolioFC03
+GET http://localhost:9000/api/v1/portfolios/{{ portfolioIdFC03 }}
+
+###
+# @name deletePortfolioBP
+DELETE http://localhost:9000/api/v1/portfolios/{{ portfolioIdBP }}
+
+###
+# @name deletePortfolioFC03
+DELETE http://localhost:9000/api/v1/portfolios/{{ portfolioIdFC03 }}
+
+###
+# @name getPortfolioBP
+GET http://localhost:9000/api/v1/portfolios/{{ portfolioIdBP }}
+
+###
+# @name getPortfolioFC03
+GET http://localhost:9000/api/v1/portfolios/{{ portfolioIdFC03 }}
 
 # ###
 # POST http://localhost:3000/events/{{eventId}}/reserve

@@ -4,36 +4,83 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/celsopires1999/estimation/internal/common"
 	"github.com/celsopires1999/estimation/internal/usecase"
 )
 
-type CostsHandler struct {
-	costsUsecase *usecase.CreateCostUseCase
+type costsHandler struct {
+	createCostUseCase *usecase.CreateCostUseCase
+	updateCostUseCase *usecase.UpdateCostUseCase
+	deleteCostUseCase *usecase.DeleteCostUseCase
 }
 
-func NewCostsHandler(costsUsecase *usecase.CreateCostUseCase) *CostsHandler {
-	return &CostsHandler{
-		costsUsecase: costsUsecase,
-	}
+func newCostsHandler(create *usecase.CreateCostUseCase, update *usecase.UpdateCostUseCase, delete *usecase.DeleteCostUseCase) *costsHandler {
+	return &costsHandler{create, update, delete}
 }
 
-func (h *CostsHandler) CreateCost(w http.ResponseWriter, r *http.Request) {
+func (h *costsHandler) createCost(w http.ResponseWriter, r *http.Request) {
 	var input usecase.CreateCostInputDTO
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	if errors := ValidatePayload(input); errors != nil {
-		WriteValidationError(w, http.StatusBadRequest, errors)
+	if errors := common.ValidatePayload(input); errors != nil {
+		writeValidationError(w, errors)
 		return
 	}
 
-	output, err := h.costsUsecase.Execute(r.Context(), input)
+	output, err := h.createCostUseCase.Execute(r.Context(), input)
 	if err != nil {
-		WriteError(w, http.StatusBadRequest, err)
+		writeDomainError(w, err)
 		return
 	}
 
-	WriteJSON(w, http.StatusCreated, output)
+	writeJSON(w, http.StatusCreated, output)
+}
+
+func (h *costsHandler) updateCost(w http.ResponseWriter, r *http.Request) {
+	var input usecase.UpdateCostInputDTO
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	input.CostID = r.PathValue("costID")
+
+	if errors := common.ValidatePayload(input); errors != nil {
+		writeValidationError(w, errors)
+		return
+	}
+
+	output, err := h.updateCostUseCase.Execute(r.Context(), input)
+	if err != nil {
+		writeDomainError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, output)
+}
+
+func (h *costsHandler) deleteCost(w http.ResponseWriter, r *http.Request) {
+	var input usecase.DeleteCostInputDTO
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	input.CostID = r.PathValue("costID")
+
+	if errors := common.ValidatePayload(input); errors != nil {
+		writeValidationError(w, errors)
+		return
+	}
+
+	output, err := h.deleteCostUseCase.Execute(r.Context(), input)
+	if err != nil {
+		writeDomainError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusNoContent, output)
 }

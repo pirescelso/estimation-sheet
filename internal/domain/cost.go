@@ -1,9 +1,13 @@
 package domain
 
 import (
+	"errors"
 	"fmt"
+	"log"
+	"slices"
 	"time"
 
+	"github.com/celsopires1999/estimation/internal/common"
 	"github.com/google/uuid"
 )
 
@@ -16,118 +20,169 @@ const (
 )
 
 type Cost struct {
-	CostID       string
-	ProjectID    string
-	CostType     CostType
-	Description  string
-	Comment      string
-	Amount       float64
-	Currency     Currency
-	Installments []Installment
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	CostID          string           `validate:"required,uuid"`
+	BaselineID      string           `validate:"required,uuid"`
+	CostType        CostType         `validate:"required"`
+	Description     string           `validate:"required"`
+	Comment         string           `validate:"-"`
+	Amount          float64          `validate:"required"`
+	Currency        Currency         `validate:"required"`
+	Tax             float64          `validate:"gte=0"`
+	CostAllocations []CostAllocation `validate:"required"`
+	CreatedAt       time.Time        `validate:"-"`
+	UpdatedAt       time.Time        `validate:"-"`
 }
 
 type RestoreCostProps Cost
-type NewInstallmentProps struct {
+type CostAllocationProps struct {
 	Year   int
 	Month  time.Month
 	Amount float64
 }
 
 type NewCostProps struct {
-	ProjectID    string
-	CostType     CostType
-	Description  string
-	Comment      string
-	Amount       float64
-	Currency     Currency
-	Installments []NewInstallmentProps
+	BaselineID      string
+	CostType        CostType
+	Description     string
+	Comment         string
+	Amount          float64
+	Currency        Currency
+	Tax             float64
+	CostAllocations []CostAllocationProps
 }
+
+var ErrCostDomainValidation = errors.New("cost domain validation failed")
 
 func NewCost(props NewCostProps) *Cost {
-	installments := createInstallment(props.Installments)
+	costAllocations := createCostAllocation(props.CostAllocations)
 	return &Cost{
-		CostID:       uuid.New().String(),
-		ProjectID:    props.ProjectID,
-		CostType:     props.CostType,
-		Description:  props.Description,
-		Comment:      props.Comment,
-		Amount:       props.Amount,
-		Currency:     props.Currency,
-		Installments: installments,
+		CostID:          uuid.New().String(),
+		BaselineID:      props.BaselineID,
+		CostType:        props.CostType,
+		Description:     props.Description,
+		Comment:         props.Comment,
+		Amount:          props.Amount,
+		Currency:        props.Currency,
+		Tax:             props.Tax,
+		CostAllocations: costAllocations,
 	}
 }
 
-func createInstallment(params []NewInstallmentProps) []Installment {
-	installments := make([]Installment, len(params))
-
-	for i, v := range params {
-		installments[i] = NewInstallment(v.Year, v.Month, v.Amount)
-	}
-
-	return installments
-}
-
-func RestoreCost(input RestoreCostProps) *Cost {
+func RestoreCost(props RestoreCostProps) *Cost {
 	return &Cost{
-		CostID:       input.CostID,
-		ProjectID:    input.ProjectID,
-		CostType:     input.CostType,
-		Description:  input.Description,
-		Comment:      input.Comment,
-		Amount:       input.Amount,
-		Currency:     input.Currency,
-		Installments: input.Installments,
-		CreatedAt:    input.CreatedAt,
-		UpdatedAt:    input.UpdatedAt,
+		CostID:          props.CostID,
+		BaselineID:      props.BaselineID,
+		CostType:        props.CostType,
+		Description:     props.Description,
+		Comment:         props.Comment,
+		Amount:          props.Amount,
+		Currency:        props.Currency,
+		Tax:             props.Tax,
+		CostAllocations: props.CostAllocations,
+		CreatedAt:       props.CreatedAt,
+		UpdatedAt:       props.UpdatedAt,
 	}
 }
 
 func (c *Cost) Validate() error {
+	err := common.Validate.Struct(c)
+	if err != nil {
+		log.Printf("%v\nstruct: %+v\n", err, c)
+		return ErrCostDomainValidation
+	}
+
 	if c.Amount <= 0 {
 		return fmt.Errorf("invalid cost amount %.2f", c.Amount)
 	}
 
 	total := 0.
-	for _, v := range c.Installments {
+	for _, v := range c.CostAllocations {
 		total += v.Amount
 	}
 	if total != c.Amount {
-		return fmt.Errorf("installment total %.2f is not equal to cost amount %.2f", total, c.Amount)
+		return fmt.Errorf("cost allocation total %.2f is not equal to cost amount %.2f", total, c.Amount)
 	}
 
-	return nil
-}
-
-func (c *Cost) AddMonths(months int) error {
-
-	for j := range c.Installments {
-		if err := c.Installments[j].AddMonths(months); err != nil {
-			return err
-		}
+	if c.Tax < 0 {
+		return fmt.Errorf("invalid tax %.2f", c.Tax)
 	}
 	return nil
 }
 
-func (c *Cost) GetInstalmments() []Installment {
-	return c.Installments
+func (c *Cost) GetCostAllocation() []CostAllocation {
+	return c.CostAllocations
 }
 
-type Installment struct {
-	PaymentDate time.Time
-	Amount      float64
+type CostAllocation struct {
+	AllocationDate time.Time
+	Amount         float64
 }
 
-func NewInstallment(year int, month time.Month, amount float64) Installment {
+func NewCostAllocation(year int, month time.Month, amount float64) CostAllocation {
 	date := time.Date(year, month, 1, 0, 0, 0, 0, time.UTC)
-	return Installment{
-		PaymentDate: date,
-		Amount:      amount,
+	return CostAllocation{
+		AllocationDate: date,
+		Amount:         amount,
 	}
 }
 
-func (i *Installment) AddMonths(months int) error {
-	i.PaymentDate = i.PaymentDate.AddDate(0, months, 0)
-	return nil
+func (c *Cost) ChangeCostType(costTypeStr *string) {
+	if costTypeStr == nil {
+		return
+	}
+	c.CostType = CostType(*costTypeStr)
+}
+
+func (c *Cost) ChangeDescription(description *string) {
+	if description == nil {
+		return
+	}
+	c.Description = *description
+}
+
+func (c *Cost) ChangeComment(comment *string) {
+	if comment == nil {
+		return
+	}
+	c.Comment = *comment
+}
+
+func (c *Cost) ChangeAmount(amount *float64) {
+	if amount == nil {
+		return
+	}
+	c.Amount = *amount
+}
+
+func (c *Cost) ChangeCurrency(currencyStr *string) {
+	if currencyStr == nil {
+		return
+	}
+	c.Currency = Currency(*currencyStr)
+}
+
+func (c *Cost) ChangeTax(tax *float64) {
+	if tax == nil {
+		return
+	}
+	c.Tax = *tax
+}
+
+func (c *Cost) ChangeCostAllocations(costAllocationProps []CostAllocationProps) {
+	costAllocations := createCostAllocation(costAllocationProps)
+	c.CostAllocations = costAllocations
+}
+
+func createCostAllocation(params []CostAllocationProps) []CostAllocation {
+	costAllocations := make([]CostAllocation, len(params))
+
+	for i, v := range params {
+		costAllocations[i] = NewCostAllocation(v.Year, v.Month, v.Amount)
+	}
+
+	slices.SortStableFunc(costAllocations, func(a, b CostAllocation) int {
+		return a.AllocationDate.Compare(b.AllocationDate)
+	})
+
+	return costAllocations
 }
