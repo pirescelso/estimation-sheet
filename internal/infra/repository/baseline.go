@@ -18,6 +18,7 @@ func (r *estimationRepositoryPostgres) CreateBaseline(ctx context.Context, basel
 	err := r.queries.InsertBaseline(ctx, db.InsertBaselineParams{
 		BaselineID:  baseline.BaselineID,
 		Code:        baseline.Code,
+		Review:      baseline.Review,
 		Title:       baseline.Title,
 		Description: pgtype.Text{String: baseline.Description, Valid: true},
 		StartDate:   pgtype.Date{Time: baseline.StartDate, Valid: true},
@@ -46,6 +47,7 @@ func (r *estimationRepositoryPostgres) GetBaseline(ctx context.Context, baseline
 	props := domain.RestoreBaselineProps{
 		BaselineID:  baselineModel.BaselineID,
 		Code:        baselineModel.Code,
+		Review:      baselineModel.Review,
 		Title:       baselineModel.Title,
 		Description: baselineModel.Description.String,
 		StartDate:   baselineModel.StartDate.Time,
@@ -69,6 +71,7 @@ func (r *estimationRepositoryPostgres) UpdateBaseline(ctx context.Context, basel
 	err := r.queries.UpdateBaseline(ctx, db.UpdateBaselineParams{
 		BaselineID:  baseline.BaselineID,
 		Code:        baseline.Code,
+		Review:      baseline.Review,
 		Title:       baseline.Title,
 		Description: pgtype.Text{String: baseline.Description, Valid: true},
 		StartDate:   pgtype.Date{Time: baseline.StartDate, Valid: true},
@@ -110,7 +113,7 @@ func checkRelationsError(baseline *domain.Baseline, err error) error {
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
 		if pgErr.Code == "23505" {
-			return common.NewConflictError(fmt.Errorf("baseline code %s already exists", baseline.Code))
+			return common.NewConflictError(fmt.Errorf("baseline code %s with review %d already exists", baseline.Code, baseline.Review))
 		}
 		if pgErr.Code == "23503" {
 			if pgErr.ConstraintName == "baselines_manager_id_fkey" {

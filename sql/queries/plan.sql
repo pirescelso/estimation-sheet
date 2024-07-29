@@ -16,7 +16,7 @@ SELECT * FROM plans WHERE plan_id = $1;
 SELECT * FROM plans WHERE code = $1;
 
 -- name: FindAllPlans :many
-SELECT * FROM plans;
+SELECT * FROM plans ORDER BY code ASC;
 
 -- name: UpdatePlan :one
 UPDATE plans

@@ -17,13 +17,14 @@ type CreateBaselineUseCase struct {
 
 type CreateBaselineInputDTO struct {
 	Code        string  `json:"code" validate:"required,max=20"`
+	Review      int32   `json:"review" validate:"required,gte=1"`
 	Title       string  `json:"title" validate:"required"`
 	Description *string `json:"description" validate:"-"`
 	StartMonth  int     `json:"start_month" validate:"gte=1,lte=12"`
 	StartYear   int     `json:"start_year" validate:"required"`
 	Duration    int32   `json:"duration" validate:"gt=0,lte=60"`
-	ManagerID   string  `json:"manager_id" validate:"required"`
-	EstimatorID string  `json:"estimator_id" validate:"required"`
+	ManagerID   string  `json:"manager_id" validate:"required,uuid4"`
+	EstimatorID string  `json:"estimator_id" validate:"required,uuid4"`
 }
 
 type CreateBaselineOutputDTO struct {
@@ -44,6 +45,7 @@ func (uc *CreateBaselineUseCase) Execute(ctx context.Context, input CreateBaseli
 
 	baseline := domain.NewBaseline(
 		input.Code,
+		input.Review,
 		input.Title,
 		description,
 		startDate,
@@ -63,6 +65,7 @@ func (uc *CreateBaselineUseCase) Execute(ctx context.Context, input CreateBaseli
 	output := mapper.BaselineOutput{
 		BaselineID:  createdBaseline.BaselineID,
 		Code:        createdBaseline.Code,
+		Review:      createdBaseline.Review,
 		Title:       createdBaseline.Title,
 		Description: createdBaseline.Description,
 		StartDate:   createdBaseline.StartDate,
@@ -81,15 +84,16 @@ type UpdateBaselineUseCase struct {
 }
 
 type UpdateBaselineInputDTO struct {
-	BaselineID  string  `json:"baseline_id" validate:"required"`
+	BaselineID  string  `json:"baseline_id" validate:"required,uuid4"`
 	Code        *string `json:"code" validate:"omitempty,max=20"`
+	Review      *int32  `json:"review" validate:"omitempty,gte=1"`
 	Title       *string `json:"title" validate:"omitempty"`
 	Description *string `json:"description" validate:"omitempty"`
 	StartMonth  *int    `json:"start_month" validate:"omitempty,gte=1,lte=12"`
 	StartYear   *int    `json:"start_year" validate:"omitempty"`
 	Duration    *int32  `json:"duration" validate:"omitempty,gt=0,lte=60"`
-	ManagerID   *string `json:"manager_id" validate:"omitempty"`
-	EstimatorID *string `json:"estimator_id" validate:"omitempty"`
+	ManagerID   *string `json:"manager_id" validate:"omitempty,uuid4"`
+	EstimatorID *string `json:"estimator_id" validate:"omitempty,uuid4"`
 }
 
 type UpdateBaselineOutputDTO struct {
@@ -107,6 +111,7 @@ func (uc *UpdateBaselineUseCase) Execute(ctx context.Context, input UpdateBaseli
 	}
 
 	baseline.ChangeCode(input.Code)
+	baseline.ChangeReview(input.Review)
 	baseline.ChangeTitle(input.Title)
 	baseline.ChangeDescription(input.Description)
 	baseline.ChangeStartDate(input.StartYear, input.StartMonth)
@@ -140,6 +145,7 @@ func (uc *UpdateBaselineUseCase) Execute(ctx context.Context, input UpdateBaseli
 	output := mapper.BaselineOutput{
 		BaselineID:  updated.BaselineID,
 		Code:        updated.Code,
+		Review:      updated.Review,
 		Title:       updated.Title,
 		Description: updated.Description,
 		StartDate:   updated.StartDate,

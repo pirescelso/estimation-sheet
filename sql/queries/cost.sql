@@ -95,23 +95,19 @@ VALUES (
         unnest($4::float8[]),
         unnest($5::timestamp[])
     );
-
--- name: FindCostAllocations :many
-SELECT
-    cost_allocation_id,
-    cost_id,
-    allocation_date,
-    amount,
-    created_at
-FROM cost_allocations
-WHERE
-    cost_id = $1;
-
 -- name: DeleteCostAllocations :execrows
 DELETE FROM cost_allocations WHERE cost_id = $1;
 
 -- name: FindCostsByBaselineId :many
-SELECT * FROM costs WHERE baseline_id = $1;
+SELECT *
+FROM costs
+WHERE
+    baseline_id = $1
+ORDER BY cost_type, description ASC;
 
 -- name: FindCostAllocationsByCostId :many
-SELECT * FROM cost_allocations WHERE cost_id = $1;
+SELECT *
+FROM cost_allocations
+WHERE
+    cost_id = $1
+ORDER BY allocation_date ASC;

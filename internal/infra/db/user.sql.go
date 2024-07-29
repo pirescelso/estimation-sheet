@@ -31,7 +31,7 @@ func (q *Queries) DeleteUser(ctx context.Context, userID string) (User, error) {
 }
 
 const findAllUsers = `-- name: FindAllUsers :many
-SELECT user_id, email, user_name, name, user_type, created_at, updated_at FROM users
+SELECT user_id, email, user_name, name, user_type, created_at, updated_at FROM users ORDER BY name ASC
 `
 
 func (q *Queries) FindAllUsers(ctx context.Context) ([]User, error) {

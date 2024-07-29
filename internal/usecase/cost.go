@@ -3,8 +3,10 @@ package usecase
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
+	"github.com/celsopires1999/estimation/internal/common"
 	"github.com/celsopires1999/estimation/internal/domain"
 	"github.com/celsopires1999/estimation/internal/infra/db"
 	"github.com/celsopires1999/estimation/internal/mapper"
@@ -12,6 +14,7 @@ import (
 
 var (
 	ErrCostAllocationDateIsInvalid = errors.New("cost allocation date is invalid")
+	ErrCostBaselineMismatch        = errors.New("cost baseline mismatch")
 )
 
 type CreateCostUseCase struct {
@@ -19,7 +22,7 @@ type CreateCostUseCase struct {
 }
 
 type CreateCostInputDTO struct {
-	BaselineID      string                `json:"baseline_id" validate:"required"`
+	BaselineID      string                `json:"baseline_id" validate:"required,uuid4"`
 	CostType        string                `json:"cost_type" validate:"required,oneof=one_time running investment" errmsg:"Cost type must be one of: one_time, running, investment"`
 	Description     string                `json:"description" validate:"required"`
 	Comment         string                `json:"comment"`
@@ -55,6 +58,14 @@ func (uc *CreateCostUseCase) Execute(ctx context.Context, input CreateCostInputD
 		baseline, err := repository.GetBaseline(ctx, input.BaselineID)
 		if err != nil {
 			return err
+		}
+
+		count, err := repository.CountPortfoliosByBaselineId(ctx, input.BaselineID)
+		if err != nil {
+			return err
+		}
+		if count > 0 {
+			return common.NewConflictError(fmt.Errorf("baseline %s has %d portfolio(s)", baseline.BaselineID, count))
 		}
 
 		costAllocations := make([]domain.CostAllocationProps, len(input.CostAllocations))
@@ -135,7 +146,8 @@ type UpdateCostUseCase struct {
 }
 
 type UpdateCostInputDTO struct {
-	CostID          string                 `json:"cost_id" validate:"required"`
+	CostID          string                 `json:"cost_id" validate:"required,uuid4"`
+	BaselineID      string                 `json:"baseline_id" validate:"required,uuid4"`
 	CostType        *string                `json:"cost_type" validate:"omitempty,required,oneof=one_time running investment" errmsg:"Cost type must be one of: one_time, running, investment"`
 	Description     *string                `json:"description" validate:"omitempty,required"`
 	Comment         *string                `json:"comment"`
@@ -167,6 +179,18 @@ func (uc *UpdateCostUseCase) Execute(ctx context.Context, input UpdateCostInputD
 		cost, err := repository.GetCost(ctx, input.CostID)
 		if err != nil {
 			return err
+		}
+
+		if cost.BaselineID != input.BaselineID {
+			return ErrCostBaselineMismatch
+		}
+
+		count, err := repository.CountPortfoliosByBaselineId(ctx, input.BaselineID)
+		if err != nil {
+			return err
+		}
+		if count > 0 {
+			return common.NewConflictError(fmt.Errorf("baseline %s has %d portfolio(s)", input.BaselineID, count))
 		}
 
 		cost.ChangeCostType(input.CostType)
@@ -242,7 +266,8 @@ type DeleteCostUseCase struct {
 }
 
 type DeleteCostInputDTO struct {
-	CostID string `json:"cost_id" validate:"required"`
+	CostID     string `json:"cost_id" validate:"required,uuid4"`
+	BaselineID string `json:"baseline_id" validate:"required,uuid4"`
 }
 
 type DeleteCostOutputDTO struct{}
@@ -260,6 +285,23 @@ func (uc *DeleteCostUseCase) Execute(ctx context.Context, input DeleteCostInputD
 			return err
 		}
 
+		cost, err := repository.GetCost(ctx, input.CostID)
+		if err != nil {
+			return err
+		}
+
+		if cost.BaselineID != input.BaselineID {
+			return ErrCostBaselineMismatch
+		}
+
+		count, err := repository.CountPortfoliosByBaselineId(ctx, input.BaselineID)
+		if err != nil {
+			return err
+		}
+		if count > 0 {
+			return common.NewConflictError(fmt.Errorf("baseline %s has %d portfolio(s)", input.BaselineID, count))
+		}
+
 		err = repository.DeleteCost(ctx, input.CostID)
 		if err != nil {
 			return err
@@ -273,4 +315,62 @@ func (uc *DeleteCostUseCase) Execute(ctx context.Context, input DeleteCostInputD
 	}
 
 	return &DeleteCostOutputDTO{}, nil
+}
+
+type GetCostsByBaselineIDUseCase struct {
+	repository domain.EstimationRepository
+}
+
+type GetCostsByBaselineIDInputDTO struct {
+	BaselineID string `json:"baseline_id" validate:"required,uuid4"`
+}
+
+type GetCostsByBaselineIDOutputDTO struct {
+	Costs []mapper.CostOutput `json:"costs"`
+}
+
+func NewGetCostsByBaselineIDUseCase(repository domain.EstimationRepository) *GetCostsByBaselineIDUseCase {
+	return &GetCostsByBaselineIDUseCase{repository}
+}
+
+func (uc *GetCostsByBaselineIDUseCase) Execute(ctx context.Context, input GetCostsByBaselineIDInputDTO) (*GetCostsByBaselineIDOutputDTO, error) {
+
+	_, err := uc.repository.GetBaseline(ctx, input.BaselineID)
+	if err != nil {
+		return nil, err
+	}
+
+	costs, err := uc.repository.GetCostManyByBaselineID(ctx, input.BaselineID)
+	if err != nil {
+		return nil, err
+	}
+
+	output := make([]mapper.CostOutput, len(costs))
+
+	for i := range costs {
+		alloc := make([]mapper.CostAllocationOutput, len(costs[i].CostAllocations))
+
+		for j := range costs[i].CostAllocations {
+			alloc[j] = mapper.CostAllocationOutput{
+				Year:   costs[i].CostAllocations[j].AllocationDate.Year(),
+				Month:  int(costs[i].CostAllocations[j].AllocationDate.Month()),
+				Amount: costs[i].CostAllocations[j].Amount,
+			}
+		}
+		output[i] = mapper.CostOutput{
+			CostID:          costs[i].CostID,
+			BaselineID:      costs[i].BaselineID,
+			CostType:        string(costs[i].CostType),
+			Description:     costs[i].Description,
+			Comment:         costs[i].Comment,
+			Amount:          costs[i].Amount,
+			Currency:        string(costs[i].Currency),
+			Tax:             costs[i].Tax,
+			CostAllocations: alloc,
+			CreatedAt:       costs[i].CreatedAt,
+			UpdatedAt:       costs[i].UpdatedAt,
+		}
+	}
+
+	return &GetCostsByBaselineIDOutputDTO{Costs: output}, nil
 }

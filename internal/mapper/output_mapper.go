@@ -38,7 +38,7 @@ type PlanOutput struct {
 	PlanID      string             `json:"plan_id"`
 	Code        string             `json:"code"`
 	Name        string             `json:"name"`
-	Assumptions domain.Assumptions `json:"assumptions"`
+	Assumptions domain.Assumptions `json:"assumptions,omitempty"`
 	CreatedAt   time.Time          `json:"created_at"`
 	UpdatedAt   time.Time          `json:"updated_at"`
 }
@@ -63,12 +63,15 @@ func (o PlanOutput) MarshalJSON() ([]byte, error) {
 type BaselineOutput struct {
 	BaselineID  string    `json:"baseline_id"`
 	Code        string    `json:"code"`
+	Review      int32     `json:"review"`
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
 	StartDate   time.Time `json:"start_date"`
 	Duration    int32     `json:"duration"`
-	ManagerID   string    `json:"manager_id"`
-	EstimatorID string    `json:"estimator_id"`
+	ManagerID   string    `json:"manager_id,omitempty"`
+	Mananger    string    `json:"manager,omitempty"`
+	EstimatorID string    `json:"estimator_id,omitempty"`
+	Estimator   string    `json:"estimator,omitempty"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
@@ -130,16 +133,19 @@ func (o CostOutput) MarshalJSON() ([]byte, error) {
 }
 
 type PortfolioOutput struct {
-	PortfolioID string    `json:"portfolio_id"`
-	PlanCode    string    `json:"plan_code"`
-	Code        string    `json:"code"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	StartDate   time.Time `json:"start_date"`
-	Manager     string    `json:"manager"`
-	Estimator   string    `json:"estimator"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	PortfolioID string         `json:"portfolio_id"`
+	Code        string         `json:"code"`
+	Review      int32          `json:"review"`
+	PlanCode    string         `json:"plan_code"`
+	Title       string         `json:"title"`
+	Description string         `json:"description"`
+	StartDate   time.Time      `json:"start_date"`
+	Duration    int32          `json:"duration"`
+	Manager     string         `json:"manager"`
+	Estimator   string         `json:"estimator"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	Budgets     []BudgetOutput `json:"budgets,omitempty"`
 }
 
 func (o PortfolioOutput) MarshalJSON() ([]byte, error) {

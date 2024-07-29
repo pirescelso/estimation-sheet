@@ -12,6 +12,7 @@ import (
 type Baseline struct {
 	BaselineID  string
 	Code        string
+	Review      int32
 	Title       string
 	Description pgtype.Text
 	StartDate   pgtype.Date

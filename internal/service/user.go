@@ -160,7 +160,7 @@ type CreateUserOutputDTO struct {
 }
 
 type UpdateUserInputDTO struct {
-	UserID   string  `json:"user_id" validate:"required"`
+	UserID   string  `json:"user_id" validate:"required,uuid4"`
 	Email    *string `json:"email" validate:"omitempty,email"`
 	UserName *string `json:"user_name" validate:"omitempty"`
 	Name     *string `json:"name" validate:"omitempty"`
@@ -173,4 +173,32 @@ type UpdateUserOutputDTO struct {
 
 type GetUserOutputDTO struct {
 	mapper.UserOutput
+}
+
+func (s *EstimationService) ListUsers(ctx context.Context, input ListUsersInputDTO) (*ListUsersOutputDTO, error) {
+	users, err := s.queries.FindAllUsers(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	usersOutput := make([]mapper.UserOutput, len(users))
+	for i, user := range users {
+		usersOutput[i] = mapper.UserOutput{
+			UserID:    user.UserID,
+			Email:     user.Email,
+			UserName:  user.UserName,
+			Name:      user.Name,
+			UserType:  user.UserType,
+			CreatedAt: user.CreatedAt.Time,
+			UpdatedAt: user.UpdatedAt.Time,
+		}
+	}
+
+	return &ListUsersOutputDTO{usersOutput}, nil
+}
+
+type ListUsersInputDTO struct{}
+
+type ListUsersOutputDTO struct {
+	Users []mapper.UserOutput `json:"users"`
 }

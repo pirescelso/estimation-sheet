@@ -9,14 +9,14 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "/workspaces/estimation/cmd/estimation/main.go",
+            "program": "/workspaces/estimation-sheet/cmd/estimation/main.go",
             "args": [
                 "--dir",
                 ".",
                 "--dbfilename",
                 "dump.rdb"
             ],
-            "cwd": "/workspaces/estimation"
+            "cwd": "/workspaces/estimation-sheet"
         }
     ]
 }

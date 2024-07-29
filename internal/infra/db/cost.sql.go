@@ -135,54 +135,12 @@ func (q *Queries) DeleteCostAllocations(ctx context.Context, costID string) (int
 	return result.RowsAffected(), nil
 }
 
-const findCostAllocations = `-- name: FindCostAllocations :many
-SELECT
-    cost_allocation_id,
-    cost_id,
-    allocation_date,
-    amount,
-    created_at
+const findCostAllocationsByCostId = `-- name: FindCostAllocationsByCostId :many
+SELECT cost_allocation_id, cost_id, allocation_date, amount, created_at, updated_at
 FROM cost_allocations
 WHERE
     cost_id = $1
-`
-
-type FindCostAllocationsRow struct {
-	CostAllocationID string
-	CostID           string
-	AllocationDate   pgtype.Date
-	Amount           float64
-	CreatedAt        pgtype.Timestamp
-}
-
-func (q *Queries) FindCostAllocations(ctx context.Context, costID string) ([]FindCostAllocationsRow, error) {
-	rows, err := q.db.Query(ctx, findCostAllocations, costID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []FindCostAllocationsRow
-	for rows.Next() {
-		var i FindCostAllocationsRow
-		if err := rows.Scan(
-			&i.CostAllocationID,
-			&i.CostID,
-			&i.AllocationDate,
-			&i.Amount,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const findCostAllocationsByCostId = `-- name: FindCostAllocationsByCostId :many
-SELECT cost_allocation_id, cost_id, allocation_date, amount, created_at, updated_at FROM cost_allocations WHERE cost_id = $1
+ORDER BY allocation_date ASC
 `
 
 func (q *Queries) FindCostAllocationsByCostId(ctx context.Context, costID string) ([]CostAllocation, error) {
@@ -235,7 +193,11 @@ func (q *Queries) FindCostById(ctx context.Context, costID string) (Cost, error)
 }
 
 const findCostsByBaselineId = `-- name: FindCostsByBaselineId :many
-SELECT cost_id, baseline_id, cost_type, description, comment, amount, currency, tax, created_at, updated_at FROM costs WHERE baseline_id = $1
+SELECT cost_id, baseline_id, cost_type, description, comment, amount, currency, tax, created_at, updated_at
+FROM costs
+WHERE
+    baseline_id = $1
+ORDER BY cost_type, description ASC
 `
 
 func (q *Queries) FindCostsByBaselineId(ctx context.Context, baselineID string) ([]Cost, error) {
