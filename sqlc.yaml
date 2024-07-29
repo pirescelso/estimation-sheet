@@ -8,6 +8,12 @@ sql:
         package: "db"
         sql_package: "pgx/v5"
         out: "internal/infra/db"
+        overrides:
+          - column: "plans.assumptions"
+            go_type:
+              import: "github.com/celsopires1999/estimation/internal/domain"
+              package: "domain"
+              type: "Assumptions"
         # overrides: 
         #   - db_type: "decimal"
         #     go_type: "float64"

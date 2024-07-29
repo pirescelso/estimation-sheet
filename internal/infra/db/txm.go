@@ -3,98 +3,106 @@ package db
 import (
 	"context"
 	"errors"
-	"fmt"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+var (
+	ErrRepositoryNotRegistered     = errors.New("repository not registered")
+	ErrRepositoryAlreadyRegistered = errors.New("repository already registered")
+	ErrInvalidRepositoryType       = errors.New("invalid repository type")
+)
+
+type RepositoryName string
+type Repository any
 type RepositoryFactory func(queries *Queries) any
 
 type TransactionManagerInterface interface {
-	Register(name string, fc RepositoryFactory)
-	GetRepository(ctx context.Context, name string) (any, error)
-	Do(ctx context.Context, fn func() error) error
-	CommitOrRollback() error
-	Rollback() error
-	UnRegister(name string)
+	Register(name RepositoryName, factory RepositoryFactory) error
+	Do(ctx context.Context, fn func(ctx context.Context, tx TransactionInterface) error) error
+	UnRegister(name RepositoryName) error
+}
+
+type TransactionInterface interface {
+	GetRepository(name RepositoryName) (Repository, error)
+}
+
+type Transaction struct {
+	queries      *Queries
+	repositories map[RepositoryName]RepositoryFactory
+}
+
+func NewTransaction(queries *Queries, repositories map[RepositoryName]RepositoryFactory) *Transaction {
+	return &Transaction{
+		queries:      queries,
+		repositories: repositories,
+	}
+}
+
+func GetAs[T any](t TransactionInterface, name RepositoryName) (T, error) {
+	repository, err := t.GetRepository(name)
+
+	var res T
+	if err != nil {
+		return res, err
+	}
+	res, ok := repository.(T)
+	if !ok {
+		return res, ErrInvalidRepositoryType
+	}
+
+	return res, nil
+}
+
+func (t *Transaction) GetRepository(name RepositoryName) (Repository, error) {
+	if repository, ok := t.repositories[name]; ok {
+		return repository(t.queries), nil
+	}
+
+	return nil, ErrRepositoryNotRegistered
 }
 
 type TransactionManager struct {
-	Conn         *pgx.Conn
-	Queries      *Queries
-	Tx           pgx.Tx
-	Repositories map[string]RepositoryFactory
+	dbpool       *pgxpool.Pool
+	repositories map[RepositoryName]RepositoryFactory
 }
 
-func NewTransactionManager(ctx context.Context, conn *pgx.Conn) *TransactionManager {
+func NewTransactionManager(dbpool *pgxpool.Pool) *TransactionManager {
 	return &TransactionManager{
-		Conn:         conn,
-		Repositories: map[string]RepositoryFactory{},
+		dbpool:       dbpool,
+		repositories: map[RepositoryName]RepositoryFactory{},
 	}
 }
 
-func (t *TransactionManager) Register(name string, fc RepositoryFactory) {
-	t.Repositories[name] = fc
-}
+func (t *TransactionManager) Register(name RepositoryName, factory RepositoryFactory) error {
+	if _, ok := t.repositories[name]; ok {
+		return ErrRepositoryAlreadyRegistered
+	}
 
-func (t *TransactionManager) UnRegister(name string) {
-	delete(t.Repositories, name)
-}
-
-func (t *TransactionManager) GetRepository(ctx context.Context, name string) (any, error) {
-	if t.Tx == nil {
-		tx, err := t.Conn.Begin(ctx)
-		if err != nil {
-			return nil, err
-		}
-		t.Tx = tx
-	}
-	qtx := t.Queries.WithTx(t.Tx)
-	repo := t.Repositories[name](qtx)
-	return repo, nil
-}
-
-func (t *TransactionManager) Do(ctx context.Context, fn func() error) error {
-	if t.Tx != nil {
-		return fmt.Errorf("transaction already started")
-	}
-	tx, err := t.Conn.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	t.Tx = tx
-	err = fn()
-	if err != nil {
-		errRb := t.Rollback(ctx)
-		if errRb != nil {
-			return fmt.Errorf("original error: %s, rollback error: %s", err.Error(), errRb.Error())
-		}
-		return err
-	}
-	return t.CommitOrRollback(ctx)
-}
-
-func (t *TransactionManager) Rollback(ctx context.Context) error {
-	if t.Tx == nil {
-		return errors.New("no transaction to rollback")
-	}
-	err := t.Tx.Rollback(ctx)
-	if err != nil {
-		return err
-	}
-	t.Tx = nil
+	t.repositories[name] = factory
 	return nil
 }
 
-func (t *TransactionManager) CommitOrRollback(ctx context.Context) error {
-	err := t.Tx.Commit(ctx)
+func (t *TransactionManager) UnRegister(name RepositoryName) error {
+	if _, ok := t.repositories[name]; !ok {
+		return ErrRepositoryNotRegistered
+	}
+
+	delete(t.repositories, name)
+	return nil
+}
+
+func (t *TransactionManager) Do(ctx context.Context, fn func(ctx context.Context, tx TransactionInterface) error) error {
+	tx, err := t.dbpool.Begin(ctx)
 	if err != nil {
-		errRb := t.Rollback(ctx)
-		if errRb != nil {
-			return fmt.Errorf("original error: %s, rollback error: %s", err.Error(), errRb.Error())
-		}
 		return err
 	}
-	t.Tx = nil
-	return nil
+	defer tx.Rollback(ctx)
+
+	queries := New(t.dbpool).WithTx(tx)
+	err = fn(ctx, NewTransaction(queries, t.repositories))
+	if err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }

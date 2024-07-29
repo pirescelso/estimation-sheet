@@ -1,9 +1,19 @@
 START TRANSACTION;
 
-DROP TABLE IF EXISTS installments;
+DROP TABLE IF EXISTS budget_allocations;
+
+DROP TABLE IF EXISTS budgets;
+
+DROP TABLE IF EXISTS portfolios;
+
+DROP TABLE IF EXISTS cost_allocations;
 
 DROP TABLE IF EXISTS costs;
 
-DROP TABLE IF EXISTS projects;
+DROP TABLE IF EXISTS baselines;
+
+DROP TABLE IF EXISTS users;
+
+DROP TABLE IF EXISTS plans;
 
 COMMIT;

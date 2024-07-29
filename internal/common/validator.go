@@ -1,9 +1,6 @@
-package http
+package common
 
 import (
-	"encoding/json"
-	"fmt"
-	"net/http"
 	"reflect"
 	"strings"
 
@@ -19,6 +16,7 @@ var (
 )
 
 func init() {
+	Validate.RegisterValidation("twodecimals", TwoDecimalsValidator)
 	en := en.New()
 	unt := ut.New(en, en)
 	transl, _ = unt.GetTranslator("en")
@@ -56,39 +54,11 @@ func ValidatePayload(input any) []PayloadValidationError {
 	return validationErrors
 }
 
-func WriteJSON(w http.ResponseWriter, status int, v any) error {
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(status)
-	return json.NewEncoder(w).Encode(v)
-}
-
-func WriteValidationError(w http.ResponseWriter, status int, errors []PayloadValidationError) {
-	WriteJSON(w, status, map[string][]PayloadValidationError{"invalid_payload": errors})
-}
-
-func WriteError(w http.ResponseWriter, status int, err error) {
-	WriteJSON(w, status, map[string]string{"error": err.Error()})
-}
-
-func ParseJSON(r *http.Request, v any) error {
-	if r.Body == nil {
-		return fmt.Errorf("missing request body")
+func TwoDecimalsValidator(fl validator.FieldLevel) bool {
+	v := fl.Field()
+	if v.Kind() != reflect.Float64 {
+		return false
 	}
 
-	return json.NewDecoder(r.Body).Decode(v)
-}
-
-func GetTokenFromRequest(r *http.Request) string {
-	tokenAuth := r.Header.Get("Authorization")
-	tokenQuery := r.URL.Query().Get("token")
-
-	if tokenAuth != "" {
-		return tokenAuth
-	}
-
-	if tokenQuery != "" {
-		return tokenQuery
-	}
-
-	return ""
+	return IsTwoDecimals(v.Float())
 }
