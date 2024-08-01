@@ -67,7 +67,7 @@ func RestoreBudget(props RestoreBudgetProps) *Budget {
 
 func (b *Budget) Validate() error {
 	if b.Amount <= 0 {
-		return fmt.Errorf("invalid budget amount %.2f", b.Amount)
+		return common.NewDomainValidationError(fmt.Errorf("invalid budget amount %.2f", b.Amount))
 	}
 
 	total := 0.
@@ -76,7 +76,7 @@ func (b *Budget) Validate() error {
 	}
 	total = common.RoundToTwoDecimals(total)
 	if total != b.Amount {
-		return fmt.Errorf("budget allocation total %.2f is not equal to budget amount %.2f", total, b.Amount)
+		return common.NewDomainValidationError(fmt.Errorf("budget allocation total %.2f is not equal to budget amount %.2f", total, b.Amount))
 	}
 
 	return nil

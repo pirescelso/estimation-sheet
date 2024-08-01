@@ -3,6 +3,7 @@ package domain
 import (
 	"cmp"
 	"errors"
+	"fmt"
 	"slices"
 	"time"
 
@@ -86,12 +87,12 @@ func (p *Plan) ChangeAssumptions(assumptions Assumptions) {
 func (p *Plan) Validate() error {
 	err := common.Validate.Struct(p)
 	if err != nil {
-		return ErrPlanValidation
+		return common.NewDomainValidationError(ErrPlanValidation)
 	}
 
 	err = p.validateAssumptions()
 	if err != nil {
-		return err
+		return common.NewDomainValidationError(fmt.Errorf("baseline domain validation failed: %w", err))
 	}
 	return nil
 }
@@ -101,7 +102,7 @@ func (p *Plan) validateAssumptions() error {
 
 	for _, assumption := range p.Assumptions {
 		if previousYear > 0 && assumption.Year != previousYear+1 {
-			return ErrAssumptionConsecutiveYears
+			return common.NewDomainValidationError(ErrAssumptionConsecutiveYears)
 		}
 		previousYear = assumption.Year
 		var numEUR int
@@ -115,10 +116,10 @@ func (p *Plan) validateAssumptions() error {
 			}
 		}
 		if numEUR != 1 {
-			return ErrAssumptionCurrencyEUR
+			return common.NewDomainValidationError(ErrAssumptionCurrencyEUR)
 		}
 		if numUSD != 1 {
-			return ErrAssumptionCurrencyUSD
+			return common.NewDomainValidationError(ErrAssumptionCurrencyUSD)
 		}
 	}
 	return nil

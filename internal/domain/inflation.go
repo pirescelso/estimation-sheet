@@ -36,7 +36,7 @@ func NewInflation(factors []factor) *inflation {
 
 func (i *inflation) ApplyInflation(value float64, start int, end int) (float64, error) {
 	if start > end {
-		return 0.0, ErrInvalidPeriod
+		return 0.0, common.NewDomainValidationError(ErrInvalidPeriod)
 	}
 	if start == end {
 		return common.RoundToTwoDecimals(value), nil
@@ -66,10 +66,10 @@ func (i *inflation) ApplyInflation(value float64, start int, end int) (float64, 
 	}
 
 	if !hasStart {
-		return 0.0, ErrNoStartInflation
+		return 0.0, common.NewDomainValidationError(ErrNoStartInflation)
 	}
 	if !hasEnd {
-		return 0.0, ErrNoEndInflation
+		return 0.0, common.NewDomainValidationError(ErrNoEndInflation)
 	}
 
 	acumulatedInflation = common.RoundToFourDecimals(acumulatedInflation)

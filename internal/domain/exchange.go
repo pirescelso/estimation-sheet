@@ -37,7 +37,7 @@ var ErrInvalidCurrencyYear = errors.New("currency and year combination not found
 func (e *exchange) ConvertToBRL(value float64, currency Currency, year int) (float64, error) {
 	rate, ok := e.rateMap[currencyYear{currency, year}]
 	if !ok {
-		return 0, ErrInvalidCurrencyYear
+		return 0, common.NewDomainValidationError(ErrInvalidCurrencyYear)
 	}
 
 	return common.RoundToTwoDecimals(value * rate), nil

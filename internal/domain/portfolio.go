@@ -1,14 +1,13 @@
 package domain
 
 import (
-	"errors"
+	"fmt"
 	"time"
 
+	"github.com/celsopires1999/estimation/internal/common"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
-
-var ErrPorfolioDomainValidation = errors.New("porfolio domain validation failed")
 
 type Portfolio struct {
 	PortfolioID string    `validate:"required"`
@@ -20,8 +19,6 @@ type Portfolio struct {
 }
 
 type RestorePortfolioProps Portfolio
-
-var ErrPortfolioDomainValidation = errors.New("portfolio domain validation failed")
 
 func NewPortfolio(baselineID string, planID string, startDate time.Time) *Portfolio {
 	return &Portfolio{
@@ -47,7 +44,7 @@ func (p *Portfolio) Validate() error {
 	validate := validator.New()
 	err := validate.Struct(p)
 	if err != nil {
-		return ErrPortfolioDomainValidation
+		return common.NewDomainValidationError(fmt.Errorf("portfolio domain validation failed: %w", err))
 	}
 	return nil
 }
