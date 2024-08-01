@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS baselines (
     baseline_id VARCHAR(36) PRIMARY KEY,
-    code VARCHAR(20) NOT NULL UNIQUE,
+    code VARCHAR(20) NOT NULL,
+    review INT NOT NULL,
     title VARCHAR(50) NOT NULL,
     description TEXT NULL,
     start_date DATE NOT NULL,
@@ -20,7 +21,8 @@ CREATE TABLE IF NOT EXISTS baselines (
     manager_id VARCHAR(36) NOT NULL REFERENCES users (user_id),
     estimator_id VARCHAR(36) NOT NULL REFERENCES users (user_id),
     created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP
+    updated_at TIMESTAMP,
+    UNIQUE (code, review)
 );
 
 CREATE TABLE IF NOT EXISTS costs (

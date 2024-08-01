@@ -31,7 +31,7 @@ func (q *Queries) DeletePlan(ctx context.Context, planID string) (Plan, error) {
 }
 
 const findAllPlans = `-- name: FindAllPlans :many
-SELECT plan_id, code, name, assumptions, created_at, updated_at FROM plans
+SELECT plan_id, code, name, assumptions, created_at, updated_at FROM plans ORDER BY code ASC
 `
 
 func (q *Queries) FindAllPlans(ctx context.Context) ([]Plan, error) {

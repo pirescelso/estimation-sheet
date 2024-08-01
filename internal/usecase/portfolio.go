@@ -16,8 +16,8 @@ type CreatePortfolioUseCase struct {
 }
 
 type CreatePortfolioInputDTO struct {
-	BaselineID  string `json:"baseline_id" validate:"required"`
-	PlanID      string `json:"plan_id" validate:"required"`
+	BaselineID  string `json:"baseline_id" validate:"required,uuid4"`
+	PlanID      string `json:"plan_id" validate:"required,uuid4"`
 	ShiftMonths int    `json:"shift_months" validate:"gte=0,lte=36"`
 }
 

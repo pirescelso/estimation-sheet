@@ -17,7 +17,7 @@ SELECT * FROM users WHERE user_id = $1;
 SELECT * FROM users WHERE email = $1;
 
 -- name: FindAllUsers :many
-SELECT * FROM users;
+SELECT * FROM users ORDER BY name ASC;
 
 -- name: UpdateUser :exec
 UPDATE users

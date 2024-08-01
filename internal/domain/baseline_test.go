@@ -15,6 +15,7 @@ func TestUnitBaseline(t *testing.T) {
 
 		baseline := domain.NewBaseline(
 			faker.Code,
+			faker.Review,
 			faker.Title,
 			faker.Description,
 			faker.StartDate,
@@ -34,6 +35,7 @@ func TestUnitBaseline(t *testing.T) {
 		faker := testutils.NewBaselineFakeBuilder()
 
 		code := ""
+		review := int32(0)
 		title := ""
 		description := ""
 		startDate := faker.StartDate
@@ -43,6 +45,7 @@ func TestUnitBaseline(t *testing.T) {
 
 		baseline := domain.NewBaseline(
 			code,
+			review,
 			title,
 			description,
 			startDate,

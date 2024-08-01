@@ -2,6 +2,7 @@ package domain
 
 import (
 	"errors"
+	"log"
 	"time"
 
 	"github.com/celsopires1999/estimation/internal/common"
@@ -9,8 +10,9 @@ import (
 )
 
 type Baseline struct {
-	BaselineID  string    `validate:"required,uuid"`
+	BaselineID  string    `validate:"required,uuid4"`
 	Code        string    `validate:"required,max=20"`
+	Review      int32     `validate:"gt=0"`
 	Title       string    `validate:"required"`
 	Description string    `validate:"-"`
 	StartDate   time.Time `validate:"required"`
@@ -27,6 +29,7 @@ var ErrBaselineDomainValidation = errors.New("baseline domain validation failed"
 
 func NewBaseline(
 	code string,
+	review int32,
 	title string,
 	description string,
 	startDate time.Time,
@@ -37,6 +40,7 @@ func NewBaseline(
 	return &Baseline{
 		BaselineID:  uuid.New().String(),
 		Code:        code,
+		Review:      review,
 		Title:       title,
 		Description: description,
 		StartDate:   startDate,
@@ -50,6 +54,7 @@ func RestoreBaseline(props RestoreBaselineProps) *Baseline {
 	return &Baseline{
 		BaselineID:  props.BaselineID,
 		Code:        props.Code,
+		Review:      props.Review,
 		Title:       props.Title,
 		Description: props.Description,
 		StartDate:   props.StartDate,
@@ -67,6 +72,13 @@ func (b *Baseline) ChangeCode(code *string) {
 		return
 	}
 	b.Code = *code
+}
+
+func (b *Baseline) ChangeReview(review *int32) {
+	if review == nil {
+		return
+	}
+	b.Review = *review
 }
 
 func (b *Baseline) ChangeTitle(title *string) {
@@ -125,6 +137,7 @@ func (b *Baseline) ChangeEstimatorID(estimatorID *string) {
 func (b *Baseline) Validate() error {
 	err := common.Validate.Struct(b)
 	if err != nil {
+		log.Printf("baseline domain validation failed: %v\nbaseline: %+v", err, b)
 		return ErrBaselineDomainValidation
 	}
 	return nil

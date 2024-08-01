@@ -74,3 +74,41 @@ func (h *portfoliosHandler) getPortfolioById(w http.ResponseWriter, r *http.Requ
 
 	writeJSON(w, http.StatusOK, output)
 }
+
+func (h *portfoliosHandler) listPortfolios(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+
+	if len(query) == 0 {
+		h.listAllPortfolios(w, r)
+		return
+	}
+
+	h.listPortfoliosByPlanID(w, r)
+}
+
+func (h *portfoliosHandler) listPortfoliosByPlanID(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	planID := query.Get("planID")
+
+	input := service.ListPortfoliosInputDTO{
+		PlanID: planID,
+	}
+
+	output, err := h.service.ListPortfoliosByPlanID(r.Context(), input)
+	if err != nil {
+		writeDomainError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, output)
+}
+
+func (h *portfoliosHandler) listAllPortfolios(w http.ResponseWriter, r *http.Request) {
+	output, err := h.service.ListAllPortfolios(r.Context())
+	if err != nil {
+		writeDomainError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, output)
+}

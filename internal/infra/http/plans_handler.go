@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/celsopires1999/estimation/internal/common"
+	"github.com/celsopires1999/estimation/internal/service"
 	"github.com/celsopires1999/estimation/internal/usecase"
 )
 
@@ -13,6 +14,7 @@ type plansHandler struct {
 	getPlanUseCase    *usecase.GetPlanUseCase
 	updatePlanUseCase *usecase.UpdatePlanUseCase
 	deletePlanUseCase *usecase.DeletePlanUseCase
+	service           *service.EstimationService
 }
 
 func newPlansHandler(
@@ -20,8 +22,9 @@ func newPlansHandler(
 	getPlanUseCase *usecase.GetPlanUseCase,
 	updatePlanUseCase *usecase.UpdatePlanUseCase,
 	deletePlanUseCase *usecase.DeletePlanUseCase,
+	service *service.EstimationService,
 ) *plansHandler {
-	return &plansHandler{createPlanUseCase, getPlanUseCase, updatePlanUseCase, deletePlanUseCase}
+	return &plansHandler{createPlanUseCase, getPlanUseCase, updatePlanUseCase, deletePlanUseCase, service}
 }
 
 func (h *plansHandler) createPlan(w http.ResponseWriter, r *http.Request) {
@@ -94,4 +97,15 @@ func (h *plansHandler) deletePlan(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusNoContent, output)
+}
+
+func (h *plansHandler) listPlans(w http.ResponseWriter, r *http.Request) {
+	input := service.ListPlansInputDTO{}
+	output, err := h.service.ListPlans(r.Context(), input)
+	if err != nil {
+		writeDomainError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, output)
 }

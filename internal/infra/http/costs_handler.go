@@ -25,6 +25,8 @@ func (h *costsHandler) createCost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	input.BaselineID = r.PathValue("baselineID")
+
 	if errors := common.ValidatePayload(input); errors != nil {
 		writeValidationError(w, errors)
 		return
@@ -47,6 +49,7 @@ func (h *costsHandler) updateCost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	input.CostID = r.PathValue("costID")
+	input.BaselineID = r.PathValue("baselineID")
 
 	if errors := common.ValidatePayload(input); errors != nil {
 		writeValidationError(w, errors)
@@ -63,13 +66,10 @@ func (h *costsHandler) updateCost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *costsHandler) deleteCost(w http.ResponseWriter, r *http.Request) {
-	var input usecase.DeleteCostInputDTO
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		writeError(w, http.StatusBadRequest, err)
-		return
+	input := usecase.DeleteCostInputDTO{
+		CostID:     r.PathValue("costID"),
+		BaselineID: r.PathValue("baselineID"),
 	}
-
-	input.CostID = r.PathValue("costID")
 
 	if errors := common.ValidatePayload(input); errors != nil {
 		writeValidationError(w, errors)

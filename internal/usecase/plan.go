@@ -106,7 +106,7 @@ type UpdatePlanUseCase struct {
 }
 
 type UpdatePlanInputDTO struct {
-	PlanID      string              `json:"plan_id" validate:"required"`
+	PlanID      string              `json:"plan_id" validate:"required,uuid4"`
 	Code        *string             `json:"code" validate:"omitempty,max=10"`
 	Name        *string             `json:"name" validate:"omitempty,max=50"`
 	Assumptions *domain.Assumptions `json:"assumptions" validate:"omitempty,required,dive"`
@@ -174,7 +174,7 @@ type DeletePlanUseCase struct {
 }
 
 type DeletePlanInputDTO struct {
-	PlanID string `json:"plan_id" validate:"required"`
+	PlanID string `json:"plan_id" validate:"required,uuid4"`
 }
 
 type DeletePlanOutputDTO struct{}

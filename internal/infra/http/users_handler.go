@@ -83,3 +83,14 @@ func (h *usersHandler) deleteUser(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusNoContent, nil)
 }
+
+func (h *usersHandler) listUsers(w http.ResponseWriter, r *http.Request) {
+	input := service.ListUsersInputDTO{}
+	output, err := h.service.ListUsers(r.Context(), input)
+	if err != nil {
+		writeDomainError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, output)
+}

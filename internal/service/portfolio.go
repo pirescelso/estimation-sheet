@@ -23,9 +23,11 @@ func (s *EstimationService) GetPortfolio(ctx context.Context, input GetPortfolio
 		PortfolioID: portfolio.PortfolioID,
 		PlanCode:    portfolio.PlanCode,
 		Code:        portfolio.Code,
+		Review:      portfolio.Review,
 		Title:       portfolio.Title,
 		Description: portfolio.Description.String,
 		StartDate:   portfolio.StartDate.Time,
+		Duration:    portfolio.Duration,
 		Manager:     portfolio.Manager,
 		Estimator:   portfolio.Estimator,
 		CreatedAt:   portfolio.CreatedAt.Time,
@@ -69,7 +71,8 @@ func (s *EstimationService) GetPortfolio(ctx context.Context, input GetPortfolio
 			UpdatedAt:         budget.UpdatedAt.Time,
 		}
 	}
-	return &GetPortfolioOutputDTO{portfolioOutput, budgetsOutput}, nil
+	portfolioOutput.Budgets = budgetsOutput
+	return &GetPortfolioOutputDTO{portfolioOutput}, nil
 }
 
 type GetPortfolioInputDTO struct {
@@ -77,6 +80,67 @@ type GetPortfolioInputDTO struct {
 }
 
 type GetPortfolioOutputDTO struct {
-	Portfolio mapper.PortfolioOutput `json:"portfolio"`
-	Budgets   []mapper.BudgetOutput  `json:"budgets"`
+	mapper.PortfolioOutput
+}
+
+func (s *EstimationService) ListPortfoliosByPlanID(ctx context.Context, input ListPortfoliosInputDTO) (*ListPortfoliosOutputDTO, error) {
+	portfolios, err := s.queries.FindAllPortfoliosByPlanIdWithRelations(ctx, input.PlanID)
+	if err != nil {
+		return nil, err
+	}
+
+	portfoliosOutput := make([]mapper.PortfolioOutput, len(portfolios))
+	for i, portfolio := range portfolios {
+		portfoliosOutput[i] = mapper.PortfolioOutput{
+			PortfolioID: portfolio.PortfolioID,
+			PlanCode:    portfolio.PlanCode,
+			Code:        portfolio.Code,
+			Review:      portfolio.Review,
+			Title:       portfolio.Title,
+			Description: portfolio.Description.String,
+			StartDate:   portfolio.StartDate.Time,
+			Duration:    portfolio.Duration,
+			Manager:     portfolio.Manager,
+			Estimator:   portfolio.Estimator,
+			CreatedAt:   portfolio.CreatedAt.Time,
+			UpdatedAt:   portfolio.UpdatedAt.Time,
+		}
+	}
+
+	return &ListPortfoliosOutputDTO{portfoliosOutput}, nil
+}
+
+func (s *EstimationService) ListAllPortfolios(ctx context.Context) (*ListPortfoliosOutputDTO, error) {
+	portfolios, err := s.queries.FindAllPortfoliosWithRelations(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	portfoliosOutput := make([]mapper.PortfolioOutput, len(portfolios))
+	for i, portfolio := range portfolios {
+		portfoliosOutput[i] = mapper.PortfolioOutput{
+			PortfolioID: portfolio.PortfolioID,
+			PlanCode:    portfolio.PlanCode,
+			Code:        portfolio.Code,
+			Review:      portfolio.Review,
+			Title:       portfolio.Title,
+			Description: portfolio.Description.String,
+			StartDate:   portfolio.StartDate.Time,
+			Duration:    portfolio.Duration,
+			Manager:     portfolio.Manager,
+			Estimator:   portfolio.Estimator,
+			CreatedAt:   portfolio.CreatedAt.Time,
+			UpdatedAt:   portfolio.UpdatedAt.Time,
+		}
+	}
+
+	return &ListPortfoliosOutputDTO{portfoliosOutput}, nil
+}
+
+type ListPortfoliosInputDTO struct {
+	PlanID string `json:"plan_id"`
+}
+
+type ListPortfoliosOutputDTO struct {
+	Portfolios []mapper.PortfolioOutput `json:"portfolios"`
 }

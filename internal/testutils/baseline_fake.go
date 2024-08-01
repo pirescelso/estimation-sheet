@@ -11,6 +11,7 @@ import (
 type BaselineFakeBuilder struct {
 	BaselineID  string
 	Code        string
+	Review      int32
 	Title       string
 	Description string
 	StartDate   time.Time
@@ -25,6 +26,7 @@ func NewBaselineFakeBuilder() *BaselineFakeBuilder {
 	return &BaselineFakeBuilder{
 		BaselineID:  uuid.New().String(),
 		Code:        randomdata.Alphanumeric(20),
+		Review:      int32(1),
 		Title:       randomdata.SillyName(),
 		Description: randomdata.Paragraph(),
 		StartDate:   time.Date(randomdata.Number(2020, 2030), time.Month(randomdata.Number(1, 12)), 1, 0, 0, 0, 0, time.UTC),
@@ -43,6 +45,11 @@ func (b *BaselineFakeBuilder) WithBaselineID(baselineID string) *BaselineFakeBui
 
 func (b *BaselineFakeBuilder) WithCode(code string) *BaselineFakeBuilder {
 	b.Code = code
+	return b
+}
+
+func (b *BaselineFakeBuilder) WithReview(review int32) *BaselineFakeBuilder {
+	b.Review = review
 	return b
 }
 
@@ -90,6 +97,7 @@ func (b *BaselineFakeBuilder) Build() *domain.Baseline {
 	props := domain.RestoreBaselineProps{}
 
 	props.BaselineID = b.BaselineID
+	props.Review = b.Review
 	props.Code = b.Code
 	props.Title = b.Title
 	props.Description = b.Description

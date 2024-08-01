@@ -51,6 +51,150 @@ func (q *Queries) DeletePortfolio(ctx context.Context, portfolioID string) (Port
 	return i, err
 }
 
+const findAllPortfoliosByPlanIdWithRelations = `-- name: FindAllPortfoliosByPlanIdWithRelations :many
+SELECT
+    pf.portfolio_id AS portfolio_id,
+    pl.code AS plan_code,
+    bl.code AS code,
+    bl.review AS review,
+    bl.title AS title,
+    bl.description AS description,
+    pf.start_date AS start_date,
+    bl.duration AS duration,
+    ma.name AS manager,
+    es.name AS estimator,
+    pf.created_at AS created_at,
+    pf.updated_at AS updated_at
+FROM
+    baselines AS bl
+    INNER JOIN portfolios AS pf ON bl.baseline_id = pf.baseline_id
+    INNER JOIN users AS ma ON ma.user_id = bl.manager_id
+    INNER JOIN users AS es ON es.user_id = bl.estimator_id
+    INNER JOIN plans AS pl ON pl.plan_id = pf.plan_id
+WHERE
+    pf.plan_id = $1
+ORDER BY bl.code, pl.code ASC
+`
+
+type FindAllPortfoliosByPlanIdWithRelationsRow struct {
+	PortfolioID string
+	PlanCode    string
+	Code        string
+	Review      int32
+	Title       string
+	Description pgtype.Text
+	StartDate   pgtype.Date
+	Duration    int32
+	Manager     string
+	Estimator   string
+	CreatedAt   pgtype.Timestamp
+	UpdatedAt   pgtype.Timestamp
+}
+
+func (q *Queries) FindAllPortfoliosByPlanIdWithRelations(ctx context.Context, planID string) ([]FindAllPortfoliosByPlanIdWithRelationsRow, error) {
+	rows, err := q.db.Query(ctx, findAllPortfoliosByPlanIdWithRelations, planID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FindAllPortfoliosByPlanIdWithRelationsRow
+	for rows.Next() {
+		var i FindAllPortfoliosByPlanIdWithRelationsRow
+		if err := rows.Scan(
+			&i.PortfolioID,
+			&i.PlanCode,
+			&i.Code,
+			&i.Review,
+			&i.Title,
+			&i.Description,
+			&i.StartDate,
+			&i.Duration,
+			&i.Manager,
+			&i.Estimator,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const findAllPortfoliosWithRelations = `-- name: FindAllPortfoliosWithRelations :many
+SELECT
+    pf.portfolio_id AS portfolio_id,
+    pl.code AS plan_code,
+    bl.code AS code,
+    bl.review AS review,
+    bl.title AS title,
+    bl.description AS description,
+    pf.start_date AS start_date,
+    bl.duration AS duration,
+    ma.name AS manager,
+    es.name AS estimator,
+    pf.created_at AS created_at,
+    pf.updated_at AS updated_at
+FROM
+    baselines AS bl
+    INNER JOIN portfolios AS pf ON bl.baseline_id = pf.baseline_id
+    INNER JOIN users AS ma ON ma.user_id = bl.manager_id
+    INNER JOIN users AS es ON es.user_id = bl.estimator_id
+    INNER JOIN plans AS pl ON pl.plan_id = pf.plan_id
+ORDER BY bl.code ASC, bl.review DESC, pl.code ASC
+`
+
+type FindAllPortfoliosWithRelationsRow struct {
+	PortfolioID string
+	PlanCode    string
+	Code        string
+	Review      int32
+	Title       string
+	Description pgtype.Text
+	StartDate   pgtype.Date
+	Duration    int32
+	Manager     string
+	Estimator   string
+	CreatedAt   pgtype.Timestamp
+	UpdatedAt   pgtype.Timestamp
+}
+
+func (q *Queries) FindAllPortfoliosWithRelations(ctx context.Context) ([]FindAllPortfoliosWithRelationsRow, error) {
+	rows, err := q.db.Query(ctx, findAllPortfoliosWithRelations)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FindAllPortfoliosWithRelationsRow
+	for rows.Next() {
+		var i FindAllPortfoliosWithRelationsRow
+		if err := rows.Scan(
+			&i.PortfolioID,
+			&i.PlanCode,
+			&i.Code,
+			&i.Review,
+			&i.Title,
+			&i.Description,
+			&i.StartDate,
+			&i.Duration,
+			&i.Manager,
+			&i.Estimator,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const findPortfolioById = `-- name: FindPortfolioById :one
 SELECT portfolio_id, baseline_id, plan_id, start_date, created_at, updated_at FROM portfolios WHERE portfolio_id = $1
 `
@@ -74,6 +218,7 @@ SELECT
     pf.portfolio_id AS portfolio_id,
     pl.code AS plan_code,
     bl.code AS code,
+    bl.review AS review,
     bl.title AS title,
     bl.description AS description,
     pf.start_date AS start_date,
@@ -96,6 +241,7 @@ type FindPortfolioByIdWithRelationsRow struct {
 	PortfolioID string
 	PlanCode    string
 	Code        string
+	Review      int32
 	Title       string
 	Description pgtype.Text
 	StartDate   pgtype.Date
@@ -113,6 +259,7 @@ func (q *Queries) FindPortfolioByIdWithRelations(ctx context.Context, portfolioI
 		&i.PortfolioID,
 		&i.PlanCode,
 		&i.Code,
+		&i.Review,
 		&i.Title,
 		&i.Description,
 		&i.StartDate,
