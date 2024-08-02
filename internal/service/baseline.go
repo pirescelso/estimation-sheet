@@ -18,21 +18,7 @@ func (s *EstimationService) GetBaseline(ctx context.Context, input GetBaselineIn
 		}
 		return nil, err
 	}
-	output := mapper.BaselineOutput{
-		BaselineID:  baseline.BaselineID,
-		Code:        baseline.Code,
-		Review:      baseline.Review,
-		Title:       baseline.Title,
-		Description: baseline.Description.String,
-		StartDate:   baseline.StartDate.Time,
-		Duration:    baseline.Duration,
-		ManagerID:   baseline.ManagerID,
-		Mananger:    baseline.Manager,
-		EstimatorID: baseline.EstimatorID,
-		Estimator:   baseline.Estimator,
-		CreatedAt:   baseline.CreatedAt.Time,
-		UpdatedAt:   baseline.UpdatedAt.Time,
-	}
+	output := mapper.BaselineOutputFromDb(mapper.BaselineDb(baseline))
 
 	return &GetBaselineOutputDTO{output}, nil
 }
@@ -53,21 +39,7 @@ func (s *EstimationService) ListBaselines(ctx context.Context, input ListBaselin
 
 	baselinesOutput := make([]mapper.BaselineOutput, len(baselines))
 	for i, baseline := range baselines {
-		baselinesOutput[i] = mapper.BaselineOutput{
-			BaselineID:  baseline.BaselineID,
-			Code:        baseline.Code,
-			Review:      baseline.Review,
-			Title:       baseline.Title,
-			Description: baseline.Description.String,
-			StartDate:   baseline.StartDate.Time,
-			Duration:    baseline.Duration,
-			ManagerID:   baseline.ManagerID,
-			Mananger:    baseline.Manager,
-			EstimatorID: baseline.EstimatorID,
-			Estimator:   baseline.Estimator,
-			CreatedAt:   baseline.CreatedAt.Time,
-			UpdatedAt:   baseline.UpdatedAt.Time,
-		}
+		baselinesOutput[i] = mapper.BaselineOutputFromDb(mapper.BaselineDb(baseline))
 	}
 
 	return &ListBaselinesOutputDTO{baselinesOutput}, nil

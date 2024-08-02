@@ -114,28 +114,7 @@ func (uc *CreateCostUseCase) Execute(ctx context.Context, input CreateCostInputD
 		return nil, err
 	}
 
-	outputCostAllocations := make([]mapper.CostAllocationOutput, len(createdCost.CostAllocations))
-
-	for i := range createdCost.CostAllocations {
-		outputCostAllocations[i] = mapper.CostAllocationOutput{
-			Year:   createdCost.CostAllocations[i].AllocationDate.Year(),
-			Month:  int(createdCost.CostAllocations[i].AllocationDate.Month()),
-			Amount: createdCost.CostAllocations[i].Amount,
-		}
-	}
-
-	output := mapper.CostOutput{
-		CostID:          createdCost.CostID,
-		BaselineID:      createdCost.BaselineID,
-		CostType:        string(createdCost.CostType),
-		Description:     createdCost.Description,
-		Comment:         createdCost.Comment,
-		Amount:          createdCost.Amount,
-		Currency:        string(createdCost.Currency),
-		Tax:             createdCost.Tax,
-		CostAllocations: outputCostAllocations,
-		CreatedAt:       createdCost.CreatedAt,
-	}
+	output := mapper.CostOutputFromDomain(*createdCost)
 
 	return &CreateCostOutputDTO{output}, nil
 }
@@ -233,29 +212,7 @@ func (uc *UpdateCostUseCase) Execute(ctx context.Context, input UpdateCostInputD
 		return nil, err
 	}
 
-	outputCostAllocations := make([]mapper.CostAllocationOutput, len(updatedCost.CostAllocations))
-
-	for i := range updatedCost.CostAllocations {
-		outputCostAllocations[i] = mapper.CostAllocationOutput{
-			Year:   updatedCost.CostAllocations[i].AllocationDate.Year(),
-			Month:  int(updatedCost.CostAllocations[i].AllocationDate.Month()),
-			Amount: updatedCost.CostAllocations[i].Amount,
-		}
-	}
-
-	output := mapper.CostOutput{
-		CostID:          updatedCost.CostID,
-		BaselineID:      updatedCost.BaselineID,
-		CostType:        string(updatedCost.CostType),
-		Description:     updatedCost.Description,
-		Comment:         updatedCost.Comment,
-		Amount:          updatedCost.Amount,
-		Currency:        string(updatedCost.Currency),
-		Tax:             updatedCost.Tax,
-		CostAllocations: outputCostAllocations,
-		CreatedAt:       updatedCost.CreatedAt,
-		UpdatedAt:       updatedCost.UpdatedAt,
-	}
+	output := mapper.CostOutputFromDomain(*updatedCost)
 
 	return &UpdateCostOutputDTO{output}, nil
 }
@@ -347,29 +304,8 @@ func (uc *GetCostsByBaselineIDUseCase) Execute(ctx context.Context, input GetCos
 
 	output := make([]mapper.CostOutput, len(costs))
 
-	for i := range costs {
-		alloc := make([]mapper.CostAllocationOutput, len(costs[i].CostAllocations))
-
-		for j := range costs[i].CostAllocations {
-			alloc[j] = mapper.CostAllocationOutput{
-				Year:   costs[i].CostAllocations[j].AllocationDate.Year(),
-				Month:  int(costs[i].CostAllocations[j].AllocationDate.Month()),
-				Amount: costs[i].CostAllocations[j].Amount,
-			}
-		}
-		output[i] = mapper.CostOutput{
-			CostID:          costs[i].CostID,
-			BaselineID:      costs[i].BaselineID,
-			CostType:        string(costs[i].CostType),
-			Description:     costs[i].Description,
-			Comment:         costs[i].Comment,
-			Amount:          costs[i].Amount,
-			Currency:        string(costs[i].Currency),
-			Tax:             costs[i].Tax,
-			CostAllocations: alloc,
-			CreatedAt:       costs[i].CreatedAt,
-			UpdatedAt:       costs[i].UpdatedAt,
-		}
+	for i, cost := range costs {
+		output[i] = mapper.CostOutputFromDomain(*cost)
 	}
 
 	return &GetCostsByBaselineIDOutputDTO{Costs: output}, nil

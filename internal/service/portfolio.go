@@ -19,20 +19,7 @@ func (s *EstimationService) GetPortfolio(ctx context.Context, input GetPortfolio
 		return nil, err
 	}
 
-	portfolioOutput := mapper.PortfolioOutput{
-		PortfolioID: portfolio.PortfolioID,
-		PlanCode:    portfolio.PlanCode,
-		Code:        portfolio.Code,
-		Review:      portfolio.Review,
-		Title:       portfolio.Title,
-		Description: portfolio.Description.String,
-		StartDate:   portfolio.StartDate.Time,
-		Duration:    portfolio.Duration,
-		Manager:     portfolio.Manager,
-		Estimator:   portfolio.Estimator,
-		CreatedAt:   portfolio.CreatedAt.Time,
-		UpdatedAt:   portfolio.UpdatedAt.Time,
-	}
+	portfolioOutput := mapper.PortfolioOutputFromDb(mapper.PortfolioDb(portfolio))
 
 	budgets, err := s.queries.FindBudgetsByPortfolioIdWithRelations(ctx, input.PortfolioID)
 	if err != nil {
@@ -47,29 +34,13 @@ func (s *EstimationService) GetPortfolio(ctx context.Context, input GetPortfolio
 			return nil, err
 		}
 
-		allocs := make([]mapper.BudgetAllocationOutput, len(allocations))
-		for j, alloc := range allocations {
-			allocs[j] = mapper.BudgetAllocationOutput{
-				Year:   alloc.AllocationDate.Time.Year(),
-				Month:  int(alloc.AllocationDate.Time.Month()),
-				Amount: alloc.Amount,
-			}
+		budgetAllocationsDb := make([]mapper.BudgetAllocationDb, len(allocations))
+
+		for i, allocation := range allocations {
+			budgetAllocationsDb[i] = mapper.BudgetAllocationDb(allocation)
 		}
 
-		budgetsOutput[i] = mapper.BudgetOutput{
-			BudgetID:          budget.BudgetID,
-			PortfolioID:       budget.PortfolioID,
-			CostType:          budget.CostType,
-			Description:       budget.Description,
-			Comment:           budget.Comment.String,
-			CostAmount:        budget.CostAmount,
-			CostCurrency:      budget.CostCurrency,
-			CostTax:           budget.CostTax,
-			Amount:            budget.Amount,
-			BudgetAllocations: allocs,
-			CreatedAt:         budget.CreatedAt.Time,
-			UpdatedAt:         budget.UpdatedAt.Time,
-		}
+		budgetsOutput[i] = mapper.BudgetOutputFromDb(mapper.BudgetDb(budget), budgetAllocationsDb)
 	}
 	portfolioOutput.Budgets = budgetsOutput
 	return &GetPortfolioOutputDTO{portfolioOutput}, nil
@@ -118,20 +89,7 @@ func (s *EstimationService) ListAllPortfolios(ctx context.Context) (*ListPortfol
 
 	portfoliosOutput := make([]mapper.PortfolioOutput, len(portfolios))
 	for i, portfolio := range portfolios {
-		portfoliosOutput[i] = mapper.PortfolioOutput{
-			PortfolioID: portfolio.PortfolioID,
-			PlanCode:    portfolio.PlanCode,
-			Code:        portfolio.Code,
-			Review:      portfolio.Review,
-			Title:       portfolio.Title,
-			Description: portfolio.Description.String,
-			StartDate:   portfolio.StartDate.Time,
-			Duration:    portfolio.Duration,
-			Manager:     portfolio.Manager,
-			Estimator:   portfolio.Estimator,
-			CreatedAt:   portfolio.CreatedAt.Time,
-			UpdatedAt:   portfolio.UpdatedAt.Time,
-		}
+		portfoliosOutput[i] = mapper.PortfolioOutputFromDb(mapper.PortfolioDb(portfolio))
 	}
 
 	return &ListPortfoliosOutputDTO{portfoliosOutput}, nil

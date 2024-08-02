@@ -62,18 +62,7 @@ func (uc *CreateBaselineUseCase) Execute(ctx context.Context, input CreateBaseli
 		return nil, err
 	}
 
-	output := mapper.BaselineOutput{
-		BaselineID:  createdBaseline.BaselineID,
-		Code:        createdBaseline.Code,
-		Review:      createdBaseline.Review,
-		Title:       createdBaseline.Title,
-		Description: createdBaseline.Description,
-		StartDate:   createdBaseline.StartDate,
-		Duration:    createdBaseline.Duration,
-		ManagerID:   createdBaseline.ManagerID,
-		EstimatorID: createdBaseline.EstimatorID,
-		CreatedAt:   createdBaseline.CreatedAt,
-	}
+	output := mapper.BaselineOutputFromDomain(*createdBaseline)
 
 	return &CreateBaselineOutputDTO{output}, nil
 }
@@ -142,19 +131,7 @@ func (uc *UpdateBaselineUseCase) Execute(ctx context.Context, input UpdateBaseli
 		return nil, err
 	}
 
-	output := mapper.BaselineOutput{
-		BaselineID:  updated.BaselineID,
-		Code:        updated.Code,
-		Review:      updated.Review,
-		Title:       updated.Title,
-		Description: updated.Description,
-		StartDate:   updated.StartDate,
-		Duration:    updated.Duration,
-		ManagerID:   updated.ManagerID,
-		EstimatorID: updated.EstimatorID,
-		CreatedAt:   updated.CreatedAt,
-		UpdatedAt:   updated.UpdatedAt,
-	}
+	output := mapper.BaselineOutputFromDomain(*updated)
 
 	return &UpdateBaselineOutputDTO{output}, nil
 }
