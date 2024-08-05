@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/celsopires1999/estimation/internal/domain"
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/celsopires1999/estimation/internal/infra/db"
 )
 
 type UserOutput struct {
@@ -92,23 +92,7 @@ func BaselineOutputFromDomain(b domain.Baseline) BaselineOutput {
 	}
 }
 
-type BaselineDb struct {
-	BaselineID  string
-	Code        string
-	Review      int32
-	Title       string
-	Description pgtype.Text
-	StartDate   pgtype.Date
-	Duration    int32
-	ManagerID   string
-	EstimatorID string
-	CreatedAt   pgtype.Timestamp
-	UpdatedAt   pgtype.Timestamp
-	Manager     string
-	Estimator   string
-}
-
-func BaselineOutputFromDb(b BaselineDb) BaselineOutput {
+func BaselineOutputFromDb(b db.BaselineRow) BaselineOutput {
 	return BaselineOutput{
 		BaselineID:  b.BaselineID,
 		Code:        b.Code,
@@ -223,22 +207,7 @@ type PortfolioOutput struct {
 	Budgets     []BudgetOutput `json:"budgets,omitempty"`
 }
 
-type PortfolioDb struct {
-	PortfolioID string
-	PlanCode    string
-	Code        string
-	Review      int32
-	Title       string
-	Description pgtype.Text
-	StartDate   pgtype.Date
-	Duration    int32
-	Manager     string
-	Estimator   string
-	CreatedAt   pgtype.Timestamp
-	UpdatedAt   pgtype.Timestamp
-}
-
-func PortfolioOutputFromDb(p PortfolioDb) PortfolioOutput {
+func PortfolioOutputFromDb(p db.PortfolioRow) PortfolioOutput {
 	return PortfolioOutput{
 		PortfolioID: p.PortfolioID,
 		PlanCode:    p.PlanCode,
@@ -289,30 +258,7 @@ type BudgetOutput struct {
 	UpdatedAt         time.Time                `json:"updated_at"`
 }
 
-type BudgetDb struct {
-	BudgetID     string
-	PortfolioID  string
-	CostType     string
-	Description  string
-	Comment      pgtype.Text
-	CostAmount   float64
-	CostCurrency string
-	CostTax      float64
-	Amount       float64
-	CreatedAt    pgtype.Timestamp
-	UpdatedAt    pgtype.Timestamp
-}
-
-type BudgetAllocationDb struct {
-	BudgetAllocationID string
-	BudgetID           string
-	AllocationDate     pgtype.Date
-	Amount             float64
-	CreatedAt          pgtype.Timestamp
-	UpdatedAt          pgtype.Timestamp
-}
-
-func BudgetOutputFromDb(budget BudgetDb, allocations []BudgetAllocationDb) BudgetOutput {
+func BudgetOutputFromDb(budget db.BudgetRow, allocations []db.BudgetAllocation) BudgetOutput {
 	allocs := make([]budgetAllocationOutput, len(allocations))
 	for i, alloc := range allocations {
 		allocs[i] = budgetAllocationOutput{

@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/celsopires1999/estimation/internal/common"
+	"github.com/celsopires1999/estimation/internal/infra/db"
 	"github.com/celsopires1999/estimation/internal/mapper"
 	"github.com/jackc/pgx/v5"
 )
@@ -19,7 +20,7 @@ func (s *EstimationService) GetPortfolio(ctx context.Context, input GetPortfolio
 		return nil, err
 	}
 
-	portfolioOutput := mapper.PortfolioOutputFromDb(mapper.PortfolioDb(portfolio))
+	portfolioOutput := mapper.PortfolioOutputFromDb(db.PortfolioRow(portfolio))
 
 	budgets, err := s.queries.FindBudgetsByPortfolioIdWithRelations(ctx, input.PortfolioID)
 	if err != nil {
@@ -34,13 +35,7 @@ func (s *EstimationService) GetPortfolio(ctx context.Context, input GetPortfolio
 			return nil, err
 		}
 
-		budgetAllocationsDb := make([]mapper.BudgetAllocationDb, len(allocations))
-
-		for i, allocation := range allocations {
-			budgetAllocationsDb[i] = mapper.BudgetAllocationDb(allocation)
-		}
-
-		budgetsOutput[i] = mapper.BudgetOutputFromDb(mapper.BudgetDb(budget), budgetAllocationsDb)
+		budgetsOutput[i] = mapper.BudgetOutputFromDb(db.BudgetRow(budget), allocations)
 	}
 	portfolioOutput.Budgets = budgetsOutput
 	return &GetPortfolioOutputDTO{portfolioOutput}, nil
@@ -89,7 +84,7 @@ func (s *EstimationService) ListAllPortfolios(ctx context.Context) (*ListPortfol
 
 	portfoliosOutput := make([]mapper.PortfolioOutput, len(portfolios))
 	for i, portfolio := range portfolios {
-		portfoliosOutput[i] = mapper.PortfolioOutputFromDb(mapper.PortfolioDb(portfolio))
+		portfoliosOutput[i] = mapper.PortfolioOutputFromDb(db.PortfolioRow(portfolio))
 	}
 
 	return &ListPortfoliosOutputDTO{portfoliosOutput}, nil
