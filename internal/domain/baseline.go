@@ -1,8 +1,7 @@
 package domain
 
 import (
-	"errors"
-	"log"
+	"fmt"
 	"time"
 
 	"github.com/celsopires1999/estimation/internal/common"
@@ -24,8 +23,6 @@ type Baseline struct {
 }
 
 type RestoreBaselineProps Baseline
-
-var ErrBaselineDomainValidation = errors.New("baseline domain validation failed")
 
 func NewBaseline(
 	code string,
@@ -137,8 +134,7 @@ func (b *Baseline) ChangeEstimatorID(estimatorID *string) {
 func (b *Baseline) Validate() error {
 	err := common.Validate.Struct(b)
 	if err != nil {
-		log.Printf("baseline domain validation failed: %v\nbaseline: %+v", err, b)
-		return ErrBaselineDomainValidation
+		return common.NewDomainValidationError(fmt.Errorf("baseline domain validation failed: %w", err))
 	}
 	return nil
 }

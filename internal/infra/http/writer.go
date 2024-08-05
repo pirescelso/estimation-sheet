@@ -41,6 +41,13 @@ func writeDomainError(w http.ResponseWriter, err error) {
 		writeConflict(w, errConflict.Error())
 		return
 	}
+
+	var errDomainValidation *common.DomainValidationError
+	if errors.As(err, &errDomainValidation) {
+		writeBadRequest(w, errDomainValidation.Error())
+		return
+	}
+
 	writeError(w, http.StatusInternalServerError, err)
 }
 
@@ -70,6 +77,18 @@ func writeConflict(w http.ResponseWriter, msg string) {
 	writeJSON(w, http.StatusConflict, m)
 }
 
+func writeBadRequest(w http.ResponseWriter, msg string) {
+	m := struct {
+		StatusCode int    `json:"status_code"`
+		Error      string `json:"error"`
+		Message    string `json:"message"`
+	}{
+		StatusCode: http.StatusBadRequest,
+		Error:      "Bad Request",
+		Message:    msg,
+	}
+	writeJSON(w, http.StatusBadRequest, m)
+}
 func writeError(w http.ResponseWriter, status int, err error) {
 	writeJSON(w, status, map[string]string{"error": err.Error()})
 }

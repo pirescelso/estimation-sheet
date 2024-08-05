@@ -1,9 +1,7 @@
 package domain
 
 import (
-	"errors"
 	"fmt"
-	"log"
 	"slices"
 	"time"
 
@@ -51,8 +49,6 @@ type NewCostProps struct {
 	CostAllocations []CostAllocationProps
 }
 
-var ErrCostDomainValidation = errors.New("cost domain validation failed")
-
 func NewCost(props NewCostProps) *Cost {
 	costAllocations := createCostAllocation(props.CostAllocations)
 	return &Cost{
@@ -87,12 +83,11 @@ func RestoreCost(props RestoreCostProps) *Cost {
 func (c *Cost) Validate() error {
 	err := common.Validate.Struct(c)
 	if err != nil {
-		log.Printf("%v\nstruct: %+v\n", err, c)
-		return ErrCostDomainValidation
+		return common.NewDomainValidationError(fmt.Errorf("cost domain validation failed: %w", err))
 	}
 
 	if c.Amount <= 0 {
-		return fmt.Errorf("invalid cost amount %.2f", c.Amount)
+		return common.NewDomainValidationError(fmt.Errorf("invalid cost amount %.2f", c.Amount))
 	}
 
 	total := 0.
@@ -100,11 +95,11 @@ func (c *Cost) Validate() error {
 		total += v.Amount
 	}
 	if total != c.Amount {
-		return fmt.Errorf("cost allocation total %.2f is not equal to cost amount %.2f", total, c.Amount)
+		return common.NewDomainValidationError(fmt.Errorf("cost allocation total %.2f is not equal to cost amount %.2f", total, c.Amount))
 	}
 
 	if c.Tax < 0 {
-		return fmt.Errorf("invalid tax %.2f", c.Tax)
+		return common.NewDomainValidationError(fmt.Errorf("invalid tax %.2f", c.Tax))
 	}
 	return nil
 }

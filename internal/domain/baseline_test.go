@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/celsopires1999/estimation/internal/common"
 	"github.com/celsopires1999/estimation/internal/domain"
 	"github.com/celsopires1999/estimation/internal/testutils"
 	"github.com/stretchr/testify/assert"
@@ -56,6 +57,7 @@ func TestUnitBaseline(t *testing.T) {
 
 		err := baseline.Validate()
 		assert.Error(t, err)
-		assert.True(t, errors.Is(err, domain.ErrBaselineDomainValidation))
+		var errDomainValidation *common.DomainValidationError
+		assert.True(t, errors.As(err, &errDomainValidation))
 	})
 }

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/celsopires1999/estimation/internal/domain"
+	"github.com/celsopires1999/estimation/internal/infra/db"
 )
 
 type UserOutput struct {
@@ -76,6 +77,39 @@ type BaselineOutput struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
+func BaselineOutputFromDomain(b domain.Baseline) BaselineOutput {
+	return BaselineOutput{
+		BaselineID:  b.BaselineID,
+		Code:        b.Code,
+		Review:      b.Review,
+		Title:       b.Title,
+		Description: b.Description,
+		StartDate:   b.StartDate,
+		Duration:    b.Duration,
+		ManagerID:   b.ManagerID,
+		EstimatorID: b.EstimatorID,
+		CreatedAt:   b.CreatedAt,
+	}
+}
+
+func BaselineOutputFromDb(b db.BaselineRow) BaselineOutput {
+	return BaselineOutput{
+		BaselineID:  b.BaselineID,
+		Code:        b.Code,
+		Review:      b.Review,
+		Title:       b.Title,
+		Description: b.Description.String,
+		StartDate:   b.StartDate.Time,
+		Duration:    b.Duration,
+		ManagerID:   b.ManagerID,
+		Mananger:    b.Manager,
+		EstimatorID: b.EstimatorID,
+		Estimator:   b.Estimator,
+		CreatedAt:   b.CreatedAt.Time,
+		UpdatedAt:   b.UpdatedAt.Time,
+	}
+}
+
 func (o BaselineOutput) MarshalJSON() ([]byte, error) {
 	type Dup BaselineOutput
 
@@ -104,12 +138,37 @@ type CostOutput struct {
 	Amount          float64                `json:"amount"`
 	Currency        string                 `json:"currency"`
 	Tax             float64                `json:"tax"`
-	CostAllocations []CostAllocationOutput `json:"cost_allocations"`
+	CostAllocations []costAllocationOutput `json:"cost_allocations"`
 	CreatedAt       time.Time              `json:"created_at"`
 	UpdatedAt       time.Time              `json:"updated_at"`
 }
 
-type CostAllocationOutput struct {
+func CostOutputFromDomain(cost domain.Cost) CostOutput {
+	allocs := make([]costAllocationOutput, len(cost.CostAllocations))
+
+	for i := range cost.CostAllocations {
+		allocs[i] = costAllocationOutput{
+			Year:   cost.CostAllocations[i].AllocationDate.Year(),
+			Month:  int(cost.CostAllocations[i].AllocationDate.Month()),
+			Amount: cost.CostAllocations[i].Amount,
+		}
+	}
+
+	return CostOutput{
+		CostID:          cost.CostID,
+		BaselineID:      cost.BaselineID,
+		CostType:        string(cost.CostType),
+		Description:     cost.Description,
+		Comment:         cost.Comment,
+		Amount:          cost.Amount,
+		Currency:        string(cost.Currency),
+		Tax:             cost.Tax,
+		CostAllocations: allocs,
+		CreatedAt:       cost.CreatedAt,
+	}
+}
+
+type costAllocationOutput struct {
 	Year   int     `json:"year"`
 	Month  int     `json:"month"`
 	Amount float64 `json:"amount"`
@@ -148,6 +207,23 @@ type PortfolioOutput struct {
 	Budgets     []BudgetOutput `json:"budgets,omitempty"`
 }
 
+func PortfolioOutputFromDb(p db.PortfolioRow) PortfolioOutput {
+	return PortfolioOutput{
+		PortfolioID: p.PortfolioID,
+		PlanCode:    p.PlanCode,
+		Code:        p.Code,
+		Review:      p.Review,
+		Title:       p.Title,
+		Description: p.Description.String,
+		StartDate:   p.StartDate.Time,
+		Duration:    p.Duration,
+		Manager:     p.Manager,
+		Estimator:   p.Estimator,
+		CreatedAt:   p.CreatedAt.Time,
+		UpdatedAt:   p.UpdatedAt.Time,
+	}
+}
+
 func (o PortfolioOutput) MarshalJSON() ([]byte, error) {
 	type Dup PortfolioOutput
 
@@ -177,12 +253,38 @@ type BudgetOutput struct {
 	CostCurrency      string                   `json:"cost_currency"`
 	CostTax           float64                  `json:"cost_tax"`
 	Amount            float64                  `json:"amount"`
-	BudgetAllocations []BudgetAllocationOutput `json:"budget_allocations"`
+	BudgetAllocations []budgetAllocationOutput `json:"budget_allocations"`
 	CreatedAt         time.Time                `json:"created_at"`
 	UpdatedAt         time.Time                `json:"updated_at"`
 }
 
-type BudgetAllocationOutput struct {
+func BudgetOutputFromDb(budget db.BudgetRow, allocations []db.BudgetAllocation) BudgetOutput {
+	allocs := make([]budgetAllocationOutput, len(allocations))
+	for i, alloc := range allocations {
+		allocs[i] = budgetAllocationOutput{
+			Year:   alloc.AllocationDate.Time.Year(),
+			Month:  int(alloc.AllocationDate.Time.Month()),
+			Amount: alloc.Amount,
+		}
+	}
+
+	return BudgetOutput{
+		BudgetID:          budget.BudgetID,
+		PortfolioID:       budget.PortfolioID,
+		CostType:          budget.CostType,
+		Description:       budget.Description,
+		Comment:           budget.Comment.String,
+		CostAmount:        budget.CostAmount,
+		CostCurrency:      budget.CostCurrency,
+		CostTax:           budget.CostTax,
+		Amount:            budget.Amount,
+		BudgetAllocations: allocs,
+		CreatedAt:         budget.CreatedAt.Time,
+		UpdatedAt:         budget.UpdatedAt.Time,
+	}
+}
+
+type budgetAllocationOutput struct {
 	Year   int     `json:"year"`
 	Month  int     `json:"month"`
 	Amount float64 `json:"amount"`

@@ -23,3 +23,15 @@ func NewConflictError(err error) *ConflictError {
 func (e *ConflictError) Error() string {
 	return e.err.Error()
 }
+
+type DomainValidationError struct {
+	err error
+}
+
+func NewDomainValidationError(err error) *DomainValidationError {
+	return &DomainValidationError{err}
+}
+
+func (e *DomainValidationError) Error() string {
+	return e.err.Error()
+}
