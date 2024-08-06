@@ -14,13 +14,7 @@ func (s *EstimationService) ListPlans(ctx context.Context, input ListPlansInputD
 
 	plansOutput := make([]mapper.PlanOutput, len(plans))
 	for i, plan := range plans {
-		plansOutput[i] = mapper.PlanOutput{
-			PlanID:    plan.PlanID,
-			Code:      plan.Code,
-			Name:      plan.Name,
-			CreatedAt: plan.CreatedAt.Time,
-			UpdatedAt: plan.UpdatedAt.Time,
-		}
+		plansOutput[i] = mapper.PlanOutputFromDb(plan)
 	}
 
 	return &ListPlansOutputDTO{plansOutput}, nil

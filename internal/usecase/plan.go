@@ -53,13 +53,7 @@ func (uc *CreatePlanUseCase) Execute(ctx context.Context, input CreatePlanInputD
 		return nil, err
 	}
 
-	output := mapper.PlanOutput{
-		PlanID:      createdPlan.PlanID,
-		Code:        createdPlan.Code,
-		Name:        createdPlan.Name,
-		Assumptions: createdPlan.Assumptions,
-		CreatedAt:   createdPlan.CreatedAt,
-	}
+	output := mapper.PlanOutputFromDomain(*createdPlan)
 
 	return &CreatePlanOutputDTO{output}, nil
 }
@@ -87,14 +81,7 @@ func (uc *GetPlanUseCase) Execute(ctx context.Context, input GetPlanInputDTO) (*
 		return nil, err
 	}
 
-	output := mapper.PlanOutput{
-		PlanID:      plan.PlanID,
-		Code:        plan.Code,
-		Name:        plan.Name,
-		Assumptions: plan.Assumptions,
-		CreatedAt:   plan.CreatedAt,
-		UpdatedAt:   plan.UpdatedAt,
-	}
+	output := mapper.PlanOutputFromDomain(*plan)
 
 	return &GetPlanOutputDTO{output}, nil
 
@@ -156,14 +143,7 @@ func (uc *UpdatePlanUseCase) Execute(ctx context.Context, input UpdatePlanInputD
 		return nil, err
 	}
 
-	output := mapper.PlanOutput{
-		PlanID:      updated.PlanID,
-		Code:        updated.Code,
-		Name:        updated.Name,
-		Assumptions: updated.Assumptions,
-		CreatedAt:   updated.CreatedAt,
-		UpdatedAt:   updated.UpdatedAt,
-	}
+	output := mapper.PlanOutputFromDomain(*updated)
 
 	return &UpdatePlanOutputDTO{output}, nil
 }

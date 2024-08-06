@@ -39,15 +39,7 @@ func (s *EstimationService) CreateUser(ctx context.Context, input CreateUserInpu
 		return nil, err
 	}
 
-	userOutput := mapper.UserOutput{
-		UserID:    created.UserID,
-		Email:     created.Email,
-		UserName:  created.UserName,
-		Name:      created.Name,
-		UserType:  created.UserType,
-		CreatedAt: created.CreatedAt.Time,
-		UpdatedAt: created.UpdatedAt.Time,
-	}
+	userOutput := mapper.UserOutputFromDb(created)
 
 	output := &CreateUserOutputDTO{userOutput}
 
@@ -88,15 +80,7 @@ func (s *EstimationService) UpdateUser(ctx context.Context, input UpdateUserInpu
 		return nil, err
 	}
 
-	userOutput := mapper.UserOutput{
-		UserID:    updated.UserID,
-		Email:     updated.Email,
-		UserName:  updated.UserName,
-		Name:      updated.Name,
-		UserType:  updated.UserType,
-		CreatedAt: updated.CreatedAt.Time,
-		UpdatedAt: updated.UpdatedAt.Time,
-	}
+	userOutput := mapper.UserOutputFromDb(updated)
 
 	output := &UpdateUserOutputDTO{userOutput}
 
@@ -112,15 +96,7 @@ func (s *EstimationService) GetUser(ctx context.Context, userID string) (*GetUse
 		return nil, err
 	}
 
-	userOutput := mapper.UserOutput{
-		UserID:    user.UserID,
-		Email:     user.Email,
-		UserName:  user.UserName,
-		Name:      user.Name,
-		UserType:  user.UserType,
-		CreatedAt: user.CreatedAt.Time,
-		UpdatedAt: user.UpdatedAt.Time,
-	}
+	userOutput := mapper.UserOutputFromDb(user)
 
 	output := &GetUserOutputDTO{userOutput}
 
@@ -183,15 +159,7 @@ func (s *EstimationService) ListUsers(ctx context.Context, input ListUsersInputD
 
 	usersOutput := make([]mapper.UserOutput, len(users))
 	for i, user := range users {
-		usersOutput[i] = mapper.UserOutput{
-			UserID:    user.UserID,
-			Email:     user.Email,
-			UserName:  user.UserName,
-			Name:      user.Name,
-			UserType:  user.UserType,
-			CreatedAt: user.CreatedAt.Time,
-			UpdatedAt: user.UpdatedAt.Time,
-		}
+		usersOutput[i] = mapper.UserOutputFromDb(user)
 	}
 
 	return &ListUsersOutputDTO{usersOutput}, nil
