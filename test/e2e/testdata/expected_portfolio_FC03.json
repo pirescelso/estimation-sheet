@@ -1,0 +1,86 @@
+{
+    "portfolio_id": "7282827d-ae78-4aae-90ff-13119f7cc243",
+    "code": "RIT123456789",
+    "review": 1,
+    "plan_code": "FC 03 2025",
+    "title": "Logistics Cost & Time Management",
+    "description": "This project will streamline our internal processes and increase overall efficiency",
+    "duration": 12,
+    "manager": "John Doe",
+    "estimator": "Marie Doe",
+    "budgets": [
+        {
+            "budget_id": "716f3df8-1664-4c99-bafa-09f3665ebbc5",
+            "portfolio_id": "7282827d-ae78-4aae-90ff-13119f7cc243",
+            "cost_type": "one_time",
+            "description": "External Consulting",
+            "comment": "estimativa de consultoria externa",
+            "cost_amount": 80000,
+            "cost_currency": "EUR",
+            "cost_tax": 23.1,
+            "amount": 689360,
+            "budget_allocations": [
+                {
+                    "year": 2025,
+                    "month": 10,
+                    "amount": 258510
+                },
+                {
+                    "year": 2025,
+                    "month": 12,
+                    "amount": 430850
+                }
+            ],
+            "created_at": "2024-08-08T02:52:23Z",
+            "updated_at": null
+        },
+        {
+            "budget_id": "edb22942-26d5-456c-91b1-fea418631a8e",
+            "portfolio_id": "7282827d-ae78-4aae-90ff-13119f7cc243",
+            "cost_type": "one_time",
+            "description": "Mão de obra do PO",
+            "comment": "estimativa do PO",
+            "cost_amount": 180000,
+            "cost_currency": "BRL",
+            "cost_tax": 0,
+            "amount": 191160,
+            "budget_allocations": [
+                {
+                    "year": 2025,
+                    "month": 7,
+                    "amount": 31860
+                },
+                {
+                    "year": 2025,
+                    "month": 8,
+                    "amount": 31860
+                },
+                {
+                    "year": 2025,
+                    "month": 9,
+                    "amount": 31860
+                },
+                {
+                    "year": 2025,
+                    "month": 10,
+                    "amount": 31860
+                },
+                {
+                    "year": 2025,
+                    "month": 11,
+                    "amount": 31860
+                },
+                {
+                    "year": 2025,
+                    "month": 12,
+                    "amount": 31860
+                }
+            ],
+            "created_at": "2024-08-08T02:52:23Z",
+            "updated_at": null
+        }
+    ],
+    "start_date": "2025-07-01",
+    "created_at": "2024-08-08T02:52:23Z",
+    "updated_at": null
+}
