@@ -18,6 +18,18 @@ type UserOutput struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+func UserOutputFromDb(user db.User) UserOutput {
+	return UserOutput{
+		UserID:    user.UserID,
+		Email:     user.Email,
+		UserName:  user.UserName,
+		Name:      user.Name,
+		UserType:  user.UserType,
+		CreatedAt: user.CreatedAt.Time,
+		UpdatedAt: user.UpdatedAt.Time,
+	}
+}
+
 func (o UserOutput) MarshalJSON() ([]byte, error) {
 	type Dup UserOutput
 
@@ -42,6 +54,28 @@ type PlanOutput struct {
 	Assumptions domain.Assumptions `json:"assumptions,omitempty"`
 	CreatedAt   time.Time          `json:"created_at"`
 	UpdatedAt   time.Time          `json:"updated_at"`
+}
+
+func PlanOutputFromDomain(plan domain.Plan) PlanOutput {
+	return PlanOutput{
+		PlanID:      plan.PlanID,
+		Code:        plan.Code,
+		Name:        plan.Name,
+		Assumptions: plan.Assumptions,
+		CreatedAt:   plan.CreatedAt,
+		UpdatedAt:   plan.UpdatedAt,
+	}
+}
+
+func PlanOutputFromDb(plan db.Plan) PlanOutput {
+	return PlanOutput{
+		PlanID:      plan.PlanID,
+		Code:        plan.Code,
+		Name:        plan.Name,
+		Assumptions: plan.Assumptions,
+		CreatedAt:   plan.CreatedAt.Time,
+		UpdatedAt:   plan.UpdatedAt.Time,
+	}
 }
 
 func (o PlanOutput) MarshalJSON() ([]byte, error) {

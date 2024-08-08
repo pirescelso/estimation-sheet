@@ -14,6 +14,9 @@ test-unit:
 test-integration:
 	go test -v -cover -p 1 -count 1 -run ^TestIntegration ./...
 
+test-e2e:
+	go test -v -p 1 -count 1 -run ^TestE2E ./test/e2e/...
+
 test-clean:
 	go clean --testcache
 
