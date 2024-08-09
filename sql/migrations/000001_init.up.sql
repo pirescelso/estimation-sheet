@@ -35,7 +35,12 @@ CREATE TABLE IF NOT EXISTS costs (
     currency VARCHAR(10) NOT NULL,
     tax FLOAT8 NOT NULL,
     created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP
+    updated_at TIMESTAMP,
+    UNIQUE (
+        baseline_id,
+        cost_type,
+        description
+    )
 );
 
 CREATE TABLE IF NOT EXISTS cost_allocations (
