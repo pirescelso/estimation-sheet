@@ -155,7 +155,7 @@ func (r estimationRepositoryPostgres) UpdateCost(ctx context.Context, cost *doma
 	})
 
 	if err != nil {
-		return err
+		return costCheckRelationsError(cost, err)
 	}
 
 	_, err = r.queries.DeleteCostAllocations(ctx, cost.CostID)
