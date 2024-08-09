@@ -252,3 +252,40 @@ func (s *CostRepositoryTestSuite) TestIntegrationCreateManyCostError() {
 		s.NotNil(err)
 	})
 }
+
+func (s *CostRepositoryTestSuite) TestIntegrationUpdateCostError() {
+	s.Run("should not allow duplicated on updating cost", func() {
+		ctx := context.Background()
+		txm := db.NewTransactionManager(s.dbpool)
+		txm.Register("EstimationRepository", func(q *db.Queries) any {
+			return repository.NewEstimationRepositoryTxmPostgres(q)
+		})
+
+		costs := []*domain.Cost{
+			testutils.NewCostFakeBuilder().WithBaselineID(s.baseline.BaselineID).WithCostType("investment").WithDescription("test cost 1").Build(),
+			testutils.NewCostFakeBuilder().WithBaselineID(s.baseline.BaselineID).WithCostType("investment").WithDescription("test cost 2").Build()}
+
+		err := txm.Do(ctx, func(ctx context.Context, tx db.TransactionInterface) error {
+			costRepo, err := db.GetAs[domain.EstimationRepository](tx, "EstimationRepository")
+			if err != nil {
+				return err
+			}
+
+			err = costRepo.CreateCostMany(ctx, costs)
+			if err != nil {
+				s.T().Fatal(err)
+			}
+			description := "test cost 1"
+			costs[1].ChangeDescription(&description)
+
+			err = costRepo.UpdateCost(ctx, costs[1])
+
+			expectedErr := common.NewConflictError(fmt.Errorf("cost type: '%s' description: '%s' already exists in the baseline id: '%s'",
+				string(costs[1].CostType), costs[1].Description, costs[1].BaselineID))
+
+			s.EqualError(err, expectedErr.Error())
+			return err
+		})
+		s.NotNil(err)
+	})
+}
