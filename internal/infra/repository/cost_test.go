@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/celsopires1999/estimation/internal/common"
 	"github.com/celsopires1999/estimation/internal/domain"
 	"github.com/celsopires1999/estimation/internal/infra/db"
 	"github.com/celsopires1999/estimation/internal/infra/repository"
@@ -153,4 +154,101 @@ func (s *CostRepositoryTestSuite) TestIntegrationCreateCost() {
 			s.Nil(err)
 		})
 	}
+}
+
+func (s *CostRepositoryTestSuite) TestIntegrationCreateCostError() {
+	type testCase struct {
+		label           string
+		costType        domain.CostType
+		description     string
+		comment         string
+		amount          float64
+		currency        domain.Currency
+		costAllocations []domain.CostAllocationProps
+	}
+	testCases := []testCase{
+		{
+			label:       "should not allow duplicated one time cost",
+			costType:    domain.OneTimeCost,
+			description: "Mão de obra do PMO",
+			comment:     "estimativa do Ferraz",
+			amount:      100.0,
+			currency:    domain.EUR,
+			costAllocations: []domain.CostAllocationProps{
+				{Year: 2020, Month: time.January, Amount: 60.},
+				{Year: 2020, Month: time.August, Amount: 40.},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(fmt.Sprintf("with %s", tc.label), func() {
+			ctx := context.Background()
+			txm := db.NewTransactionManager(s.dbpool)
+			txm.Register("EstimationRepository", func(q *db.Queries) any {
+				return repository.NewEstimationRepositoryTxmPostgres(q)
+			})
+			err := txm.Do(ctx, func(ctx context.Context, tx db.TransactionInterface) error {
+				costRepo, err := db.GetAs[domain.EstimationRepository](tx, "EstimationRepository")
+				if err != nil {
+					return err
+				}
+
+				props := domain.NewCostProps{
+					BaselineID:      s.baseline.BaselineID,
+					CostType:        tc.costType,
+					Description:     tc.description,
+					Comment:         tc.comment,
+					Amount:          tc.amount,
+					Currency:        tc.currency,
+					CostAllocations: tc.costAllocations,
+				}
+				cost := domain.NewCost(props)
+				err = cost.Validate()
+				if err != nil {
+					return err
+				}
+
+				err = costRepo.CreateCost(ctx, cost)
+				if err != nil {
+					return err
+				}
+
+				expectedErr := common.NewConflictError(fmt.Errorf("cost type: '%s' description: '%s' already exists in the baseline id: '%s'",
+					string(cost.CostType), cost.Description, cost.BaselineID))
+
+				err = costRepo.CreateCost(ctx, cost)
+				s.EqualError(err, expectedErr.Error())
+				return err
+			})
+			s.NotNil(err)
+		})
+	}
+}
+
+func (s *CostRepositoryTestSuite) TestIntegrationCreateManyCostError() {
+	s.Run("should not allow duplicated on creating many costs", func() {
+		ctx := context.Background()
+		txm := db.NewTransactionManager(s.dbpool)
+		txm.Register("EstimationRepository", func(q *db.Queries) any {
+			return repository.NewEstimationRepositoryTxmPostgres(q)
+		})
+
+		cost := testutils.NewCostFakeBuilder().Build()
+
+		costs := []*domain.Cost{cost, cost}
+
+		err := txm.Do(ctx, func(ctx context.Context, tx db.TransactionInterface) error {
+			costRepo, err := db.GetAs[domain.EstimationRepository](tx, "EstimationRepository")
+			if err != nil {
+				return err
+			}
+			expectedErr := common.NewConflictError(fmt.Errorf("duplicated cost on creating many costs: ERROR: duplicate key value violates unique constraint \"costs_pkey\" (SQLSTATE 23505)"))
+
+			err = costRepo.CreateCostMany(ctx, costs)
+			s.EqualError(err, expectedErr.Error())
+			return err
+		})
+		s.NotNil(err)
+	})
 }

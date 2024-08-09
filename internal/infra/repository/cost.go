@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/celsopires1999/estimation/internal/common"
@@ -29,7 +30,7 @@ func (r estimationRepositoryPostgres) CreateCost(ctx context.Context, cost *doma
 	})
 
 	if err != nil {
-		return err
+		return costCheckRelationsError(cost, err)
 	}
 
 	costAllocations := db.BulkInsertCostAllocationParams{}
@@ -74,6 +75,14 @@ func (r estimationRepositoryPostgres) CreateCostMany(ctx context.Context, costs 
 	}
 	err := r.queries.BulkInsertCost(ctx, costsParams)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" {
+				return common.NewConflictError(fmt.Errorf("duplicated cost on creating many costs: %w", err))
+			}
+			return common.NewConflictError(err)
+		}
+
 		return err
 	}
 	err = r.queries.BulkInsertCostAllocation(ctx, costAllocations)
@@ -230,4 +239,16 @@ func (r estimationRepositoryPostgres) GetCostManyByBaselineID(ctx context.Contex
 	}
 
 	return costs, nil
+}
+
+func costCheckRelationsError(cost *domain.Cost, err error) error {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		if pgErr.Code == "23505" {
+			return common.NewConflictError(fmt.Errorf("cost type: '%s' description: '%s' already exists in the baseline id: '%s'", string(cost.CostType), cost.Description, cost.BaselineID))
+		}
+		return common.NewConflictError(err)
+	}
+
+	return err
 }
