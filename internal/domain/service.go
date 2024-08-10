@@ -10,6 +10,7 @@ type PortfolioService struct {
 	planID      string
 	baseline    *Baseline
 	costs       []*Cost
+	efforts     []*Effort
 	inflation   *inflation
 	exchange    *exchange
 	shiftMonths int
@@ -19,6 +20,7 @@ func NewPortfolioService(
 	planID string,
 	baseline *Baseline,
 	costs []*Cost,
+	efforts []*Effort,
 	inflation *inflation,
 	exchange *exchange,
 	shiftMonths int,
@@ -27,18 +29,19 @@ func NewPortfolioService(
 		planID,
 		baseline,
 		costs,
+		efforts,
 		inflation,
 		exchange,
 		shiftMonths,
 	}
 }
 
-func (s *PortfolioService) GeneratePortfolio() (*Portfolio, []*Budget, error) {
+func (s *PortfolioService) GeneratePortfolio() (*Portfolio, []*Budget, []*Workload, error) {
 	startDate := s.baseline.StartDate.AddDate(0, s.shiftMonths, 0)
 	portfolio := NewPortfolio(s.baseline.BaselineID, s.planID, startDate)
 	err := portfolio.Validate()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	budgets := make([]*Budget, len(s.costs))
@@ -52,7 +55,7 @@ func (s *PortfolioService) GeneratePortfolio() (*Portfolio, []*Budget, error) {
 			newAllocationDate := costAllocation.AllocationDate.AddDate(0, s.shiftMonths, 0)
 			amount, err := s.calculateBudgetAllocation(cost, costAllocation, newAllocationDate)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			}
 			budgetProps.Amount += amount
 			budgetProps.BudgetAllocations = append(budgetProps.BudgetAllocations, NewBudgetAllocationProps{
@@ -66,11 +69,33 @@ func (s *PortfolioService) GeneratePortfolio() (*Portfolio, []*Budget, error) {
 		budgets[i] = NewBudget(budgetProps)
 		err := budgets[i].Validate()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 	}
 
-	return portfolio, budgets, nil
+	workloads := make([]*Workload, len(s.efforts))
+
+	for i, effort := range s.efforts {
+		workloadProps := NewWorkloadProps{}
+		workloadProps.PortfolioID = portfolio.PortfolioID
+		workloadProps.EffortID = effort.EffortID
+		workloadProps.Hours = effort.Hours
+		for _, effortAllocation := range effort.EffortAllocations {
+			newAllocationDate := effortAllocation.AllocationDate.AddDate(0, s.shiftMonths, 0)
+			workloadProps.WorkloadAllocations = append(workloadProps.WorkloadAllocations, NewWorkloadAllocationProps{
+				Year:  newAllocationDate.Year(),
+				Month: newAllocationDate.Month(),
+				Hours: effortAllocation.Hours,
+			})
+		}
+		workloads[i] = NewWorkload(workloadProps)
+		err := workloads[i].Validate()
+		if err != nil {
+			return nil, nil, nil, err
+		}
+	}
+
+	return portfolio, budgets, workloads, nil
 
 }
 

@@ -38,6 +38,24 @@ func (s *EstimationService) GetPortfolio(ctx context.Context, input GetPortfolio
 		budgetsOutput[i] = mapper.BudgetOutputFromDb(db.BudgetRow(budget), allocations)
 	}
 	portfolioOutput.Budgets = budgetsOutput
+
+	workloads, err := s.queries.FindWorkloadsByPortfolioIdWithRelations(ctx, input.PortfolioID)
+	if err != nil {
+		return nil, err
+	}
+
+	workloadsOutput := make([]mapper.WorkloadOutput, len(workloads))
+
+	for i, workload := range workloads {
+		allocations, err := s.queries.FindWorkloadAllocations(ctx, workload.WorkloadID)
+		if err != nil {
+			return nil, err
+		}
+
+		workloadsOutput[i] = mapper.WorkloadOutputFromDb(db.WorkloadRow(workload), allocations)
+	}
+	portfolioOutput.Workloads = workloadsOutput
+
 	return &GetPortfolioOutputDTO{portfolioOutput}, nil
 }
 

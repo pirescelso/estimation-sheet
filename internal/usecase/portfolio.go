@@ -67,11 +67,16 @@ func (uc *CreatePortfolioUseCase) Execute(ctx context.Context, input CreatePortf
 			return err
 		}
 
+		efforts, err := repository.GetEffortManyByBaselineID(ctx, input.BaselineID)
+		if err != nil {
+			return err
+		}
+
 		inflation := plan.GetInflation()
 		exchange := plan.GetExchange()
 
-		portfolioService := domain.NewPortfolioService(input.PlanID, baseline, costs, inflation, exchange, input.ShiftMonths)
-		portfolio, budgets, err := portfolioService.GeneratePortfolio()
+		portfolioService := domain.NewPortfolioService(input.PlanID, baseline, costs, efforts, inflation, exchange, input.ShiftMonths)
+		portfolio, budgets, workloads, err := portfolioService.GeneratePortfolio()
 		if err != nil {
 			return err
 		}
@@ -82,6 +87,11 @@ func (uc *CreatePortfolioUseCase) Execute(ctx context.Context, input CreatePortf
 		}
 
 		err = repository.CreateBudgetMany(ctx, budgets)
+		if err != nil {
+			return err
+		}
+
+		err = repository.CreateWorkloadMany(ctx, workloads)
 		if err != nil {
 			return err
 		}
@@ -140,6 +150,11 @@ func (uc *DeletePortfolioUseCase) Execute(ctx context.Context, input DeletePortf
 		}
 
 		err = repository.DeleteBudgetsByPortfolioID(ctx, input.PortfolioID)
+		if err != nil {
+			return err
+		}
+
+		err = repository.DeleteWorkloadsByPortfolioID(ctx, input.PortfolioID)
 		if err != nil {
 			return err
 		}

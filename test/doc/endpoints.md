@@ -15,6 +15,14 @@ DELETE http://localhost:9000/api/v1/plans/{planID}
 GET http://localhost:9000/api/v1/plans/{planID}
 GET http://localhost:9000/api/v1/plans
 ```
+## Competences
+```bash	
+POST http://localhost:9000/api/v1/competences
+PATCH http://localhost:9000/api/v1/competences/{competenceID}
+DELETE http://localhost:9000/api/v1/competences/{competenceID}
+GET http://localhost:9000/api/v1/competences/{competenceID}
+GET http://localhost:9000/api/v1/competences
+```
 ## Baselines
 ```bash	
 POST http://localhost:9000/api/baselines
@@ -26,6 +34,10 @@ POST http://localhost:9000/api/baselines/{baselineID}/costs
 PATCH http://localhost:9000/api/baselines/{baselineID}/costs/{costID}
 DELETE http://localhost:9000/api/baselines/{baselineID}/costs/{costID}
 GET http://localhost:9000/api/baselines/{baselineID}/costs
+POST http://localhost:9000/api/baselines/{baselineID}/efforts
+PATCH http://localhost:9000/api/baselines/{baselineID}/efforts/{effortID}
+DELETE http://localhost:9000/api/baselines/{baselineID}/efforts/{effortID}
+GET http://localhost:9000/api/baselines/{baselineID}/efforts
 ```
 ### Portfolios
 ```bash
