@@ -10,11 +10,12 @@ import (
 )
 
 type baselineHandler struct {
-	createBaselineUseCase       *usecase.CreateBaselineUseCase
-	updateBaselineUseCase       *usecase.UpdateBaselineUseCase
-	deleteBaselineUseCase       *usecase.DeleteBaselineUseCase
-	getCostsByBaselineIDUseCase *usecase.GetCostsByBaselineIDUseCase
-	service                     *service.EstimationService
+	createBaselineUseCase         *usecase.CreateBaselineUseCase
+	updateBaselineUseCase         *usecase.UpdateBaselineUseCase
+	deleteBaselineUseCase         *usecase.DeleteBaselineUseCase
+	getCostsByBaselineIDUseCase   *usecase.GetCostsByBaselineIDUseCase
+	getEffortsByBaselineIDUseCase *usecase.GetEffortsByBaselineIDUseCase
+	service                       *service.EstimationService
 }
 
 func newBaselinesHandler(
@@ -22,9 +23,10 @@ func newBaselinesHandler(
 	updateBaselineUseCase *usecase.UpdateBaselineUseCase,
 	deleteBaselineUseCase *usecase.DeleteBaselineUseCase,
 	getCostsByBaselineIDUseCase *usecase.GetCostsByBaselineIDUseCase,
+	getEffortsByBaselineIDUseCase *usecase.GetEffortsByBaselineIDUseCase,
 	service *service.EstimationService,
 ) *baselineHandler {
-	return &baselineHandler{createBaselineUseCase, updateBaselineUseCase, deleteBaselineUseCase, getCostsByBaselineIDUseCase, service}
+	return &baselineHandler{createBaselineUseCase, updateBaselineUseCase, deleteBaselineUseCase, getCostsByBaselineIDUseCase, getEffortsByBaselineIDUseCase, service}
 }
 
 func (h *baselineHandler) createBaseline(w http.ResponseWriter, r *http.Request) {
@@ -119,6 +121,20 @@ func (h *baselineHandler) getCostsByBaselineID(w http.ResponseWriter, r *http.Re
 	}
 
 	output, err := h.getCostsByBaselineIDUseCase.Execute(r.Context(), input)
+	if err != nil {
+		writeDomainError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, output)
+}
+
+func (h *baselineHandler) getEffortsByBaselineID(w http.ResponseWriter, r *http.Request) {
+	input := usecase.GetEffortsByBaselineIDInputDTO{
+		BaselineID: r.PathValue("baselineID"),
+	}
+
+	output, err := h.getEffortsByBaselineIDUseCase.Execute(r.Context(), input)
 	if err != nil {
 		writeDomainError(w, err)
 		return

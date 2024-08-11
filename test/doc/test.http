@@ -30,6 +30,37 @@ GET http://localhost:9000/api/v1/users
 @managerId = {{ createManager.response.body.user_id }}
 @estimatorId = {{ createEstimator.response.body.user_id }}
 
+### 
+# @name createCompetence
+POST http://localhost:9000/api/v1/competences
+Content-Type: application/json
+
+{
+    "code": "Tech Doc",
+    "name": "Technical Documentation"
+}
+###
+@competenceId = {{ createCompetence.response.body.competence_id }}
+
+### 
+# @name updateTechDoc
+PATCH http://localhost:9000/api/v1/competences/{{ competenceId }}
+Content-Type: application/json
+
+{
+    "name": "Technical Documentation - Updated"
+}
+###
+# @name getCompetence
+GET http://localhost:9000/api/v1/competences/{{ competenceId }}
+###
+# @name listCompetences
+GET http://localhost:9000/api/v1/competences
+
+###
+# @name deleteCompetence
+DELETE http://localhost:9000/api/v1/competences/{{ competenceId }}
+
 ###
 # @name createBaseline
 POST http://localhost:9000/api/v1/baselines
@@ -181,6 +212,79 @@ Content-Type: application/json
     }
   ]
 }
+
+###
+# @name createEffort
+POST http://localhost:9000/api/v1/baselines/{{ baselineId }}/efforts
+Content-Type: application/json
+
+{
+    "competence_id": "{{ competenceId }}",
+    "comment": "considerado a Simone na atividade",
+    "hours":    160,
+    "effort_allocations": [
+        {
+            "year": 2024,
+            "month": 1,
+            "hours": 20
+        },
+        {
+            "year": 2024,
+            "month": 2,
+            "hours": 20
+        },
+        {
+            "year": 2024,
+            "month": 3,
+            "hours": 20
+        },
+        {
+            "year": 2024,
+            "month": 4,
+            "hours": 20
+        },
+        {
+            "year": 2024,
+            "month": 5,
+            "hours": 20
+        },
+        {
+            "year": 2024,
+            "month": 6,
+            "hours": 20
+        },
+        {
+            "year": 2024,
+            "month": 7,
+            "hours": 20
+        },
+        {
+            "year": 2024,
+            "month": 8,
+            "hours": 20
+        }
+    ]
+}
+
+@effortId = {{ createEffort.response.body.effort_id }}
+
+###
+# @name updateEffort
+PATCH http://localhost:9000/api/v1/baselines/{{ baselineId }}/efforts/{{ effortId }}
+Content-Type: application/json
+
+{
+    "hours": 160,
+    "comment": "considerado Simone e Regina na atividade"
+}
+
+### 
+# @name listEfforts
+GET http://localhost:9000/api/v1/baselines/{{ baselineId }}/efforts
+
+###
+# @name deleteEffort
+DELETE http://localhost:9000/api/v1/baselines/{{ baselineId }}/efforts/{{ effortId }}
 
 ###
 # @name createPlanBP
@@ -418,8 +522,12 @@ Content-Type: application/json
 @portfolioIdFC03 = {{ createPortfolioFC03.response.body.portfolio_id }}
 
 ###
-# @name listPortfoliosByPlan
+# @name listPortfoliosFC03
 GET http://localhost:9000/api/v1/portfolios?planID={{ planIdFC03 }}
+
+###
+# @name listPortfoliosBP
+GET http://localhost:9000/api/v1/portfolios?planID={{ planIdBP }}
 
 ###
 # @name getPortfolioBP

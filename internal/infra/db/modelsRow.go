@@ -32,6 +32,17 @@ type BudgetRow struct {
 	UpdatedAt    pgtype.Timestamp
 }
 
+type WorkloadRow struct {
+	WorkloadID     string
+	PortfolioID    string
+	CompetenceCode string
+	CompetenceName string
+	Comment        pgtype.Text
+	Hours          int32
+	CreatedAt      pgtype.Timestamp
+	UpdatedAt      pgtype.Timestamp
+}
+
 type PortfolioRow struct {
 	PortfolioID string
 	PlanCode    string

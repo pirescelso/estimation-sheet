@@ -12,7 +12,7 @@ import (
 )
 
 type Plan struct {
-	PlanID      string      `validate:"required,uuid"`
+	PlanID      string      `validate:"required,uuid4"`
 	Code        string      `validate:"required,max=10"`
 	Name        string      `validate:"required,max=50"`
 	Assumptions Assumptions `validate:"required,dive"`
@@ -92,7 +92,7 @@ func (p *Plan) Validate() error {
 
 	err = p.validateAssumptions()
 	if err != nil {
-		return common.NewDomainValidationError(fmt.Errorf("baseline domain validation failed: %w", err))
+		return common.NewDomainValidationError(fmt.Errorf("plan domain validation failed: %w", err))
 	}
 	return nil
 }

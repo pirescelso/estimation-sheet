@@ -5,9 +5,12 @@ import "context"
 type EstimationRepository interface {
 	BaselineRepository
 	CostRepository
+	CompetenceRepository
+	EffortRepository
 	PlanRepository
 	PortfolioRepository
 	BudgetRepository
+	WorkloadRepository
 	Validator
 }
 
@@ -25,6 +28,22 @@ type CostRepository interface {
 	UpdateCost(ctx context.Context, cost *Cost) error
 	DeleteCost(ctx context.Context, costID string) error
 	GetCostManyByBaselineID(ctx context.Context, baselineID string) ([]*Cost, error)
+}
+
+type CompetenceRepository interface {
+	CreateCompetence(ctx context.Context, competence *Competence) error
+	GetCompetence(ctx context.Context, competenceID string) (*Competence, error)
+	UpdateCompetence(ctx context.Context, competence *Competence) error
+	DeleteCompetence(ctx context.Context, competenceID string) error
+}
+
+type EffortRepository interface {
+	CreateEffort(ctx context.Context, effort *Effort) error
+	CreateEffortMany(ctx context.Context, efforts []*Effort) error
+	GetEffort(ctx context.Context, effortID string) (*Effort, error)
+	UpdateEffort(ctx context.Context, effort *Effort) error
+	DeleteEffort(ctx context.Context, effortID string) error
+	GetEffortManyByBaselineID(ctx context.Context, baselineID string) ([]*Effort, error)
 }
 
 type PlanRepository interface {
@@ -51,6 +70,16 @@ type BudgetRepository interface {
 	DeleteBudget(ctx context.Context, budgetID string) error
 	DeleteBudgetsByPortfolioID(ctx context.Context, portfolioID string) error
 	GetBudgetManyByPortfolioID(ctx context.Context, portfolioID string) ([]*Budget, error)
+}
+
+type WorkloadRepository interface {
+	CreateWorkload(ctx context.Context, workload *Workload) error
+	CreateWorkloadMany(ctx context.Context, workloads []*Workload) error
+	GetWorkload(ctx context.Context, workloadID string) (*Workload, error)
+	UpdateWorkload(ctx context.Context, workload *Workload) error
+	DeleteWorkload(ctx context.Context, workloadID string) error
+	DeleteWorkloadsByPortfolioID(ctx context.Context, portfolioID string) error
+	GetWorkloadManyByPortfolioID(ctx context.Context, portfolioID string) ([]*Workload, error)
 }
 
 type Validator interface {

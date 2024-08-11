@@ -76,6 +76,31 @@ func TruncateTables(dbpool *pgxpool.Pool) error {
 		return err
 	}
 
+	_, err = tx.Exec(ctx, "TRUNCATE TABLE workload_allocations CASCADE;")
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(ctx, "TRUNCATE TABLE workloads CASCADE;")
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(ctx, "TRUNCATE TABLE effort_allocations CASCADE;")
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(ctx, "TRUNCATE TABLE efforts CASCADE;")
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(ctx, "TRUNCATE TABLE competences CASCADE;")
+	if err != nil {
+		return err
+	}
+
 	_, err = tx.Exec(ctx, "TRUNCATE TABLE baselines CASCADE;")
 	if err != nil {
 		return err

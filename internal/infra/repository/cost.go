@@ -16,7 +16,7 @@ import (
 	"github.com/celsopires1999/estimation/internal/infra/db"
 )
 
-func (r estimationRepositoryPostgres) CreateCost(ctx context.Context, cost *domain.Cost) error {
+func (r *estimationRepositoryPostgres) CreateCost(ctx context.Context, cost *domain.Cost) error {
 	err := r.queries.InsertCost(ctx, db.InsertCostParams{
 		CostID:      cost.CostID,
 		BaselineID:  cost.BaselineID,
@@ -50,7 +50,7 @@ func (r estimationRepositoryPostgres) CreateCost(ctx context.Context, cost *doma
 	return nil
 }
 
-func (r estimationRepositoryPostgres) CreateCostMany(ctx context.Context, costs []*domain.Cost) error {
+func (r *estimationRepositoryPostgres) CreateCostMany(ctx context.Context, costs []*domain.Cost) error {
 	costsParams := db.BulkInsertCostParams{}
 	costAllocations := db.BulkInsertCostAllocationParams{}
 
@@ -93,7 +93,7 @@ func (r estimationRepositoryPostgres) CreateCostMany(ctx context.Context, costs 
 	return nil
 }
 
-func (r estimationRepositoryPostgres) GetCost(ctx context.Context, costID string) (*domain.Cost, error) {
+func (r *estimationRepositoryPostgres) GetCost(ctx context.Context, costID string) (*domain.Cost, error) {
 	costModel, err := r.queries.FindCostById(ctx, costID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -141,7 +141,7 @@ func (r estimationRepositoryPostgres) GetCost(ctx context.Context, costID string
 	return cost, nil
 }
 
-func (r estimationRepositoryPostgres) UpdateCost(ctx context.Context, cost *domain.Cost) error {
+func (r *estimationRepositoryPostgres) UpdateCost(ctx context.Context, cost *domain.Cost) error {
 	err := r.queries.UpdateCost(ctx, db.UpdateCostParams{
 		CostID:      cost.CostID,
 		BaselineID:  cost.BaselineID,
@@ -177,7 +177,7 @@ func (r estimationRepositoryPostgres) UpdateCost(ctx context.Context, cost *doma
 	return err
 }
 
-func (r estimationRepositoryPostgres) DeleteCost(ctx context.Context, costID string) error {
+func (r *estimationRepositoryPostgres) DeleteCost(ctx context.Context, costID string) error {
 	_, err := r.queries.DeleteCostAllocations(ctx, costID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -196,7 +196,7 @@ func (r estimationRepositoryPostgres) DeleteCost(ctx context.Context, costID str
 	return err
 }
 
-func (r estimationRepositoryPostgres) GetCostManyByBaselineID(ctx context.Context, baselineID string) ([]*domain.Cost, error) {
+func (r *estimationRepositoryPostgres) GetCostManyByBaselineID(ctx context.Context, baselineID string) ([]*domain.Cost, error) {
 	costModels, err := r.queries.FindCostsByBaselineId(ctx, baselineID)
 	if err != nil {
 		return nil, err

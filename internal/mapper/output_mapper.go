@@ -225,20 +225,123 @@ func (o CostOutput) MarshalJSON() ([]byte, error) {
 	return b, err
 }
 
+type CompetenceOutput struct {
+	CompetenceID string    `json:"competence_id"`
+	Code         string    `json:"code"`
+	Name         string    `json:"name"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+func CompetenceOutputFromDomain(c domain.Competence) CompetenceOutput {
+	return CompetenceOutput{
+		CompetenceID: c.CompetenceID,
+		Code:         c.Code,
+		Name:         c.Name,
+		CreatedAt:    c.CreatedAt,
+		UpdatedAt:    c.UpdatedAt,
+	}
+}
+
+func CompetenceOutputFromDb(c db.Competence) CompetenceOutput {
+	return CompetenceOutput{
+		CompetenceID: c.CompetenceID,
+		Code:         c.Code,
+		Name:         c.Name,
+		CreatedAt:    c.CreatedAt.Time,
+		UpdatedAt:    c.UpdatedAt.Time,
+	}
+}
+
+func (o CompetenceOutput) MarshalJSON() ([]byte, error) {
+	type Dup CompetenceOutput
+
+	tmp := struct {
+		Dup
+		CreatedAt *string `json:"created_at"`
+		UpdatedAt *string `json:"updated_at"`
+	}{
+		Dup: (Dup)(o),
+	}
+
+	tmp.CreatedAt, tmp.UpdatedAt = fmtRFC3339Time(o.CreatedAt, o.UpdatedAt)
+
+	b, err := json.Marshal(tmp)
+	return b, err
+}
+
+type EffortOutput struct {
+	EffortID          string                   `json:"effort_id"`
+	BaselineID        string                   `json:"baseline_id"`
+	CompetenceID      string                   `json:"competence_id"`
+	Comment           string                   `json:"comment"`
+	Hours             int                      `json:"hours"`
+	EffortAllocations []effortAllocationOutput `json:"effort_allocations"`
+	CreatedAt         time.Time                `json:"created_at"`
+	UpdatedAt         time.Time                `json:"updated_at"`
+}
+
+func EffortOutputFromDomain(effort domain.Effort) EffortOutput {
+	allocs := make([]effortAllocationOutput, len(effort.EffortAllocations))
+
+	for i := range effort.EffortAllocations {
+		allocs[i] = effortAllocationOutput{
+			Year:  effort.EffortAllocations[i].AllocationDate.Year(),
+			Month: int(effort.EffortAllocations[i].AllocationDate.Month()),
+			Hours: int(effort.EffortAllocations[i].Hours),
+		}
+	}
+
+	return EffortOutput{
+		EffortID:          effort.EffortID,
+		BaselineID:        effort.BaselineID,
+		CompetenceID:      effort.CompetenceID,
+		Comment:           effort.Comment,
+		Hours:             effort.Hours,
+		EffortAllocations: allocs,
+		CreatedAt:         effort.CreatedAt,
+		UpdatedAt:         effort.UpdatedAt,
+	}
+}
+
+type effortAllocationOutput struct {
+	Year  int `json:"year"`
+	Month int `json:"month"`
+	Hours int `json:"hours"`
+}
+
+func (o EffortOutput) MarshalJSON() ([]byte, error) {
+	type Dup EffortOutput
+
+	tmp := struct {
+		Dup
+		CreatedAt *string `json:"created_at"`
+		UpdatedAt *string `json:"updated_at"`
+	}{
+		Dup: (Dup)(o),
+	}
+
+	tmp.CreatedAt, tmp.UpdatedAt = fmtRFC3339Time(o.CreatedAt, o.UpdatedAt)
+
+	b, err := json.Marshal(tmp)
+	return b, err
+}
+
 type PortfolioOutput struct {
-	PortfolioID string         `json:"portfolio_id"`
-	Code        string         `json:"code"`
-	Review      int32          `json:"review"`
-	PlanCode    string         `json:"plan_code"`
-	Title       string         `json:"title"`
-	Description string         `json:"description"`
-	StartDate   time.Time      `json:"start_date"`
-	Duration    int32          `json:"duration"`
-	Manager     string         `json:"manager"`
-	Estimator   string         `json:"estimator"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
-	Budgets     []BudgetOutput `json:"budgets,omitempty"`
+	PortfolioID string           `json:"portfolio_id"`
+	Code        string           `json:"code"`
+	Review      int32            `json:"review"`
+	PlanCode    string           `json:"plan_code"`
+	Title       string           `json:"title"`
+	Description string           `json:"description"`
+	StartDate   time.Time        `json:"start_date"`
+	Duration    int32            `json:"duration"`
+	Manager     string           `json:"manager"`
+	Estimator   string           `json:"estimator"`
+	CreatedAt   time.Time        `json:"created_at"`
+	UpdatedAt   time.Time        `json:"updated_at"`
+	Budgets     []BudgetOutput   `json:"budgets,omitempty"`
+	Workloads   []WorkloadOutput `json:"workloads,omitempty"`
 }
 
 func PortfolioOutputFromDb(p db.PortfolioRow) PortfolioOutput {
@@ -326,6 +429,64 @@ type budgetAllocationOutput struct {
 
 func (o BudgetOutput) MarshalJSON() ([]byte, error) {
 	type Dup BudgetOutput
+
+	tmp := struct {
+		Dup
+		CreatedAt *string `json:"created_at"`
+		UpdatedAt *string `json:"updated_at"`
+	}{
+		Dup: (Dup)(o),
+	}
+
+	tmp.CreatedAt, tmp.UpdatedAt = fmtRFC3339Time(o.CreatedAt, o.UpdatedAt)
+
+	b, err := json.Marshal(tmp)
+	return b, err
+}
+
+type WorkloadOutput struct {
+	WorkloadID          string                     `json:"workload_id"`
+	PortfolioID         string                     `json:"portfolio_id"`
+	CompetenceCode      string                     `json:"competence_code"`
+	CompetenceName      string                     `json:"competence_name"`
+	Comment             string                     `json:"comment"`
+	Hours               int                        `json:"hours"`
+	WorkloadAllocations []workloadAllocationOutput `json:"workload_allocations"`
+	CreatedAt           time.Time                  `json:"created_at"`
+	UpdatedAt           time.Time                  `json:"updated_at"`
+}
+
+func WorkloadOutputFromDb(workload db.WorkloadRow, allocations []db.WorkloadAllocation) WorkloadOutput {
+	allocs := make([]workloadAllocationOutput, len(allocations))
+	for i, alloc := range allocations {
+		allocs[i] = workloadAllocationOutput{
+			Year:  alloc.AllocationDate.Time.Year(),
+			Month: int(alloc.AllocationDate.Time.Month()),
+			Hours: int(alloc.Hours),
+		}
+	}
+
+	return WorkloadOutput{
+		WorkloadID:          workload.WorkloadID,
+		PortfolioID:         workload.PortfolioID,
+		CompetenceCode:      workload.CompetenceCode,
+		CompetenceName:      workload.CompetenceName,
+		Comment:             workload.Comment.String,
+		Hours:               int(workload.Hours),
+		WorkloadAllocations: allocs,
+		CreatedAt:           workload.CreatedAt.Time,
+		UpdatedAt:           workload.UpdatedAt.Time,
+	}
+}
+
+type workloadAllocationOutput struct {
+	Year  int `json:"year"`
+	Month int `json:"month"`
+	Hours int `json:"hours"`
+}
+
+func (o WorkloadOutput) MarshalJSON() ([]byte, error) {
+	type Dup WorkloadOutput
 
 	tmp := struct {
 		Dup

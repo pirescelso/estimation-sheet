@@ -50,7 +50,7 @@ type NewCostProps struct {
 }
 
 func NewCost(props NewCostProps) *Cost {
-	costAllocations := createCostAllocation(props.CostAllocations)
+	costAllocations := createCostAllocations(props.CostAllocations)
 	return &Cost{
 		CostID:          uuid.New().String(),
 		BaselineID:      props.BaselineID,
@@ -104,16 +104,12 @@ func (c *Cost) Validate() error {
 	return nil
 }
 
-func (c *Cost) GetCostAllocation() []CostAllocation {
-	return c.CostAllocations
-}
-
 type CostAllocation struct {
 	AllocationDate time.Time
 	Amount         float64
 }
 
-func NewCostAllocation(year int, month time.Month, amount float64) CostAllocation {
+func newCostAllocation(year int, month time.Month, amount float64) CostAllocation {
 	date := time.Date(year, month, 1, 0, 0, 0, 0, time.UTC)
 	return CostAllocation{
 		AllocationDate: date,
@@ -164,15 +160,15 @@ func (c *Cost) ChangeTax(tax *float64) {
 }
 
 func (c *Cost) ChangeCostAllocations(costAllocationProps []CostAllocationProps) {
-	costAllocations := createCostAllocation(costAllocationProps)
+	costAllocations := createCostAllocations(costAllocationProps)
 	c.CostAllocations = costAllocations
 }
 
-func createCostAllocation(params []CostAllocationProps) []CostAllocation {
+func createCostAllocations(params []CostAllocationProps) []CostAllocation {
 	costAllocations := make([]CostAllocation, len(params))
 
 	for i, v := range params {
-		costAllocations[i] = NewCostAllocation(v.Year, v.Month, v.Amount)
+		costAllocations[i] = newCostAllocation(v.Year, v.Month, v.Amount)
 	}
 
 	slices.SortStableFunc(costAllocations, func(a, b CostAllocation) int {

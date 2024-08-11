@@ -291,7 +291,6 @@ func NewGetCostsByBaselineIDUseCase(repository domain.EstimationRepository) *Get
 }
 
 func (uc *GetCostsByBaselineIDUseCase) Execute(ctx context.Context, input GetCostsByBaselineIDInputDTO) (*GetCostsByBaselineIDOutputDTO, error) {
-
 	_, err := uc.repository.GetBaseline(ctx, input.BaselineID)
 	if err != nil {
 		return nil, err

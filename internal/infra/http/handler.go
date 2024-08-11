@@ -37,14 +37,26 @@ func Handler(ctx context.Context, dbpool *pgxpool.Pool) *http.ServeMux {
 	deleteCostUseCase := usecase.NewDeleteCostUseCase(txm)
 	getCostsByBaselineIDUseCase := usecase.NewGetCostsByBaselineIDUseCase(repository)
 
+	createCompetenceUseCase := usecase.NewCreateCompetenceUseCase(repository)
+	updateCompetenceUseCase := usecase.NewUpdateCompetenceUseCase(repository)
+	deleteCompetenceUseCase := usecase.NewDeleteCompetenceUseCase(repository)
+	getCompetenceUseCase := usecase.NewGetCompetenceUseCase(repository)
+
+	createEffortUseCase := usecase.NewCreateEffortUseCase(txm)
+	updateEffortUseCase := usecase.NewUpdateEfforttUseCase(txm)
+	deleteEffortUseCase := usecase.NewDeleteEffortUseCase(txm)
+	getEffortsByBaselineIDUseCase := usecase.NewGetEffortsByBaselineIDUseCase(repository)
+
 	createPortfolioUseCase := usecase.NewCreatePortfolioUseCase(txm)
 	deletePortfolioUseCase := usecase.NewDeletePortfolioUseCase(txm)
 
 	// Handlers
 	usersHandler := newUsersHandler(service)
 	plansHandler := newPlansHandler(createPlanUseCase, getPlanUseCase, updatePlanUseCase, deletePlanUseCase, service)
-	baselinesHandler := newBaselinesHandler(createBaselineUseCase, updateBaselineUseCase, deleteBaselineUseCase, getCostsByBaselineIDUseCase, service)
+	baselinesHandler := newBaselinesHandler(createBaselineUseCase, updateBaselineUseCase, deleteBaselineUseCase, getCostsByBaselineIDUseCase, getEffortsByBaselineIDUseCase, service)
 	costsHandler := newCostsHandler(createCostUsecase, updateCostUseCase, deleteCostUseCase)
+	competencesHandler := newCompetencesHandler(createCompetenceUseCase, updateCompetenceUseCase, deleteCompetenceUseCase, getCompetenceUseCase, service)
+	effortsHandler := newEffortsHandler(createEffortUseCase, updateEffortUseCase, deleteEffortUseCase)
 	portfoliosHandler := newPortfoliosHandler(createPortfolioUseCase, deletePortfolioUseCase, service)
 
 	// Routes
@@ -61,16 +73,27 @@ func Handler(ctx context.Context, dbpool *pgxpool.Pool) *http.ServeMux {
 	r.HandleFunc("GET /plans/{planID}", plansHandler.getPlan)
 	r.HandleFunc("GET /plans", plansHandler.listPlans)
 
+	r.HandleFunc("POST /competences", competencesHandler.createCompetence)
+	r.HandleFunc("PATCH /competences/{competenceID}", competencesHandler.updateCompetence)
+	r.HandleFunc("DELETE /competences/{competenceID}", competencesHandler.deleteCompetence)
+	r.HandleFunc("GET /competences/{competenceID}", competencesHandler.getCompetence)
+	r.HandleFunc("GET /competences", competencesHandler.listCompetences)
+
 	r.HandleFunc("POST /baselines", baselinesHandler.createBaseline)
 	r.HandleFunc("PATCH /baselines/{baselineID}", baselinesHandler.updateBaseline)
 	r.HandleFunc("DELETE /baselines/{baselineID}", baselinesHandler.deleteBaseline)
 	r.HandleFunc("GET /baselines/{baselineID}", baselinesHandler.getBaseline)
 	r.HandleFunc("GET /baselines", baselinesHandler.listBaselines)
 	r.HandleFunc("GET /baselines/{baselineID}/costs", baselinesHandler.getCostsByBaselineID)
+	r.HandleFunc("GET /baselines/{baselineID}/efforts", baselinesHandler.getEffortsByBaselineID)
 
 	r.HandleFunc("POST /baselines/{baselineID}/costs", costsHandler.createCost)
 	r.HandleFunc("PATCH /baselines/{baselineID}/costs/{costID}", costsHandler.updateCost)
 	r.HandleFunc("DELETE /baselines/{baselineID}/costs/{costID}", costsHandler.deleteCost)
+
+	r.HandleFunc("POST /baselines/{baselineID}/efforts", effortsHandler.createEffort)
+	r.HandleFunc("PATCH /baselines/{baselineID}/efforts/{effortID}", effortsHandler.updateEffort)
+	r.HandleFunc("DELETE /baselines/{baselineID}/efforts/{effortID}", effortsHandler.deleteEffort)
 
 	r.HandleFunc("POST /portfolios", portfoliosHandler.createPortfolio)
 	r.HandleFunc("DELETE /portfolios/{portfolioID}", portfoliosHandler.deletePortfolio)

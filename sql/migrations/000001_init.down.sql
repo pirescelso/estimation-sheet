@@ -10,6 +10,16 @@ DROP TABLE IF EXISTS cost_allocations;
 
 DROP TABLE IF EXISTS costs;
 
+DROP TABLE IF EXISTS workload_allocations;
+
+DROP TABLE IF EXISTS workloads;
+
+DROP TABLE IF EXISTS effort_allocations;
+
+DROP TABLE IF EXISTS efforts;
+
+DROP TABLE IF EXISTS competences;
+
 DROP TABLE IF EXISTS baselines;
 
 DROP TABLE IF EXISTS users;
