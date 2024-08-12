@@ -50,16 +50,17 @@ type Competence struct {
 }
 
 type Cost struct {
-	CostID      string
-	BaselineID  string
-	CostType    string
-	Description string
-	Comment     pgtype.Text
-	Amount      float64
-	Currency    string
-	Tax         float64
-	CreatedAt   pgtype.Timestamp
-	UpdatedAt   pgtype.Timestamp
+	CostID         string
+	BaselineID     string
+	CostType       string
+	Description    string
+	Comment        pgtype.Text
+	Amount         float64
+	Currency       string
+	Tax            float64
+	ApplyInflation bool
+	CreatedAt      pgtype.Timestamp
+	UpdatedAt      pgtype.Timestamp
 }
 
 type CostAllocation struct {

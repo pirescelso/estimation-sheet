@@ -1,23 +1,32 @@
 package testutils
 
 import (
+	"time"
+
 	"github.com/Pallinder/go-randomdata"
-	"github.com/celsopires1999/estimation/internal/service"
+	"github.com/celsopires1999/estimation/internal/domain"
+	"github.com/google/uuid"
 )
 
 type UserFakeBuilder struct {
-	Email    string
-	UserName string
-	Name     string
-	UserType string
+	UserID    string
+	Email     string
+	UserName  string
+	Name      string
+	UserType  string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func NewUserFakeBuilder() *UserFakeBuilder {
 	return &UserFakeBuilder{
-		Email:    randomdata.Email(),
-		UserName: randomdata.Letters(8),
-		Name:     randomdata.FullName(randomdata.RandomGender),
-		UserType: randomdata.StringSample("manager", "estimator"),
+		UserID:    uuid.NewString(),
+		Email:     randomdata.Email(),
+		UserName:  randomdata.Letters(8),
+		Name:      randomdata.FullName(randomdata.RandomGender),
+		UserType:  randomdata.StringSample("manager", "estimator"),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 }
 
@@ -31,11 +40,14 @@ func (b *UserFakeBuilder) WithEstimator() *UserFakeBuilder {
 	return b
 }
 
-func (b *UserFakeBuilder) Build() service.CreateUserInputDTO {
-	return service.CreateUserInputDTO{
-		Email:    b.Email,
-		UserName: b.UserName,
-		Name:     b.Name,
-		UserType: b.UserType,
+func (b *UserFakeBuilder) Build() *domain.User {
+	return &domain.User{
+		UserID:    b.UserID,
+		Email:     b.Email,
+		UserName:  b.UserName,
+		Name:      b.Name,
+		UserType:  domain.UserType(b.UserType),
+		CreatedAt: b.CreatedAt,
+		UpdatedAt: b.UpdatedAt,
 	}
 }

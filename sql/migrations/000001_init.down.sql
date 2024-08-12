@@ -4,15 +4,15 @@ DROP TABLE IF EXISTS budget_allocations;
 
 DROP TABLE IF EXISTS budgets;
 
+DROP TABLE IF EXISTS workload_allocations;
+
+DROP TABLE IF EXISTS workloads;
+
 DROP TABLE IF EXISTS portfolios;
 
 DROP TABLE IF EXISTS cost_allocations;
 
 DROP TABLE IF EXISTS costs;
-
-DROP TABLE IF EXISTS workload_allocations;
-
-DROP TABLE IF EXISTS workloads;
 
 DROP TABLE IF EXISTS effort_allocations;
 

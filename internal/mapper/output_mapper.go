@@ -18,6 +18,18 @@ type UserOutput struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+func UserOutputFromDomain(user domain.User) UserOutput {
+	return UserOutput{
+		UserID:    user.UserID,
+		Email:     user.Email,
+		UserName:  user.UserName,
+		Name:      user.Name,
+		UserType:  user.UserType.String(),
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
+}
+
 func UserOutputFromDb(user db.User) UserOutput {
 	return UserOutput{
 		UserID:    user.UserID,
@@ -172,6 +184,7 @@ type CostOutput struct {
 	Amount          float64                `json:"amount"`
 	Currency        string                 `json:"currency"`
 	Tax             float64                `json:"tax"`
+	ApplyInflation  bool                   `json:"apply_inflation"`
 	CostAllocations []costAllocationOutput `json:"cost_allocations"`
 	CreatedAt       time.Time              `json:"created_at"`
 	UpdatedAt       time.Time              `json:"updated_at"`
@@ -191,12 +204,13 @@ func CostOutputFromDomain(cost domain.Cost) CostOutput {
 	return CostOutput{
 		CostID:          cost.CostID,
 		BaselineID:      cost.BaselineID,
-		CostType:        string(cost.CostType),
+		CostType:        cost.CostType.String(),
 		Description:     cost.Description,
 		Comment:         cost.Comment,
 		Amount:          cost.Amount,
-		Currency:        string(cost.Currency),
+		Currency:        cost.Currency.String(),
 		Tax:             cost.Tax,
+		ApplyInflation:  cost.ApplyInflation,
 		CostAllocations: allocs,
 		CreatedAt:       cost.CreatedAt,
 	}
@@ -381,18 +395,19 @@ func (o PortfolioOutput) MarshalJSON() ([]byte, error) {
 }
 
 type BudgetOutput struct {
-	BudgetID          string                   `json:"budget_id"`
-	PortfolioID       string                   `json:"portfolio_id"`
-	CostType          string                   `json:"cost_type"`
-	Description       string                   `json:"description"`
-	Comment           string                   `json:"comment"`
-	CostAmount        float64                  `json:"cost_amount"`
-	CostCurrency      string                   `json:"cost_currency"`
-	CostTax           float64                  `json:"cost_tax"`
-	Amount            float64                  `json:"amount"`
-	BudgetAllocations []budgetAllocationOutput `json:"budget_allocations"`
-	CreatedAt         time.Time                `json:"created_at"`
-	UpdatedAt         time.Time                `json:"updated_at"`
+	BudgetID           string                   `json:"budget_id"`
+	PortfolioID        string                   `json:"portfolio_id"`
+	CostType           string                   `json:"cost_type"`
+	Description        string                   `json:"description"`
+	Comment            string                   `json:"comment"`
+	CostAmount         float64                  `json:"cost_amount"`
+	CostCurrency       string                   `json:"cost_currency"`
+	CostTax            float64                  `json:"cost_tax"`
+	CostApplyInflation bool                     `json:"cost_apply_inflation"`
+	Amount             float64                  `json:"amount"`
+	BudgetAllocations  []budgetAllocationOutput `json:"budget_allocations"`
+	CreatedAt          time.Time                `json:"created_at"`
+	UpdatedAt          time.Time                `json:"updated_at"`
 }
 
 func BudgetOutputFromDb(budget db.BudgetRow, allocations []db.BudgetAllocation) BudgetOutput {
@@ -406,18 +421,19 @@ func BudgetOutputFromDb(budget db.BudgetRow, allocations []db.BudgetAllocation) 
 	}
 
 	return BudgetOutput{
-		BudgetID:          budget.BudgetID,
-		PortfolioID:       budget.PortfolioID,
-		CostType:          budget.CostType,
-		Description:       budget.Description,
-		Comment:           budget.Comment.String,
-		CostAmount:        budget.CostAmount,
-		CostCurrency:      budget.CostCurrency,
-		CostTax:           budget.CostTax,
-		Amount:            budget.Amount,
-		BudgetAllocations: allocs,
-		CreatedAt:         budget.CreatedAt.Time,
-		UpdatedAt:         budget.UpdatedAt.Time,
+		BudgetID:           budget.BudgetID,
+		PortfolioID:        budget.PortfolioID,
+		CostType:           budget.CostType,
+		Description:        budget.Description,
+		Comment:            budget.Comment.String,
+		CostAmount:         budget.CostAmount,
+		CostCurrency:       budget.CostCurrency,
+		CostTax:            budget.CostTax,
+		CostApplyInflation: budget.CostApplyInflation,
+		Amount:             budget.Amount,
+		BudgetAllocations:  allocs,
+		CreatedAt:          budget.CreatedAt.Time,
+		UpdatedAt:          budget.UpdatedAt.Time,
 	}
 }
 

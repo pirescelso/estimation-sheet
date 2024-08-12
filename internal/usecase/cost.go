@@ -25,10 +25,11 @@ type CreateCostInputDTO struct {
 	BaselineID      string                `json:"baseline_id" validate:"required,uuid4"`
 	CostType        string                `json:"cost_type" validate:"required,oneof=one_time running investment" errmsg:"Cost type must be one of: one_time, running, investment"`
 	Description     string                `json:"description" validate:"required"`
-	Comment         string                `json:"comment"`
+	Comment         string                `json:"comment" validate:"-"`
 	Amount          float64               `json:"amount" validate:"required,twodecimals"`
 	Currency        string                `json:"currency" validate:"required,oneof=BRL USD EUR"`
 	Tax             float64               `json:"tax" validate:"gte=0,twodecimals"`
+	ApplyInflation  bool                  `json:"apply_inflation" validate:"-"`
 	CostAllocations []CostAllocationInput `json:"cost_allocations" validate:"required,dive"`
 }
 
@@ -84,6 +85,7 @@ func (uc *CreateCostUseCase) Execute(ctx context.Context, input CreateCostInputD
 			Amount:          input.Amount,
 			Currency:        domain.Currency(input.Currency),
 			Tax:             input.Tax,
+			ApplyInflation:  input.ApplyInflation,
 			CostAllocations: costAllocations,
 		})
 
@@ -129,10 +131,11 @@ type UpdateCostInputDTO struct {
 	BaselineID      string                 `json:"baseline_id" validate:"required,uuid4"`
 	CostType        *string                `json:"cost_type" validate:"omitempty,required,oneof=one_time running investment" errmsg:"Cost type must be one of: one_time, running, investment"`
 	Description     *string                `json:"description" validate:"omitempty,required"`
-	Comment         *string                `json:"comment"`
+	Comment         *string                `json:"comment" validate:"omitempty"`
 	Amount          *float64               `json:"amount" validate:"omitempty,required,twodecimals"`
 	Currency        *string                `json:"currency" validate:"omitempty,required,oneof=BRL USD EUR"`
 	Tax             *float64               `json:"tax" validate:"omitempty,gte=0,twodecimals"`
+	ApplyInflation  *bool                  `json:"apply_inflation" validate:"omitempty"`
 	CostAllocations []*CostAllocationInput `json:"cost_allocations" validate:"omitempty,required,dive"`
 }
 
@@ -178,6 +181,7 @@ func (uc *UpdateCostUseCase) Execute(ctx context.Context, input UpdateCostInputD
 		cost.ChangeAmount(input.Amount)
 		cost.ChangeCurrency(input.Currency)
 		cost.ChangeTax(input.Tax)
+		cost.ChangeApplyInflation(input.ApplyInflation)
 
 		if input.CostAllocations != nil {
 			costAllocations := make([]domain.CostAllocationProps, len(input.CostAllocations))

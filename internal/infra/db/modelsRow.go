@@ -19,17 +19,18 @@ type BaselineRow struct {
 }
 
 type BudgetRow struct {
-	BudgetID     string
-	PortfolioID  string
-	CostType     string
-	Description  string
-	Comment      pgtype.Text
-	CostAmount   float64
-	CostCurrency string
-	CostTax      float64
-	Amount       float64
-	CreatedAt    pgtype.Timestamp
-	UpdatedAt    pgtype.Timestamp
+	BudgetID           string
+	PortfolioID        string
+	CostType           string
+	Description        string
+	Comment            pgtype.Text
+	CostAmount         float64
+	CostCurrency       string
+	CostTax            float64
+	CostApplyInflation bool
+	Amount             float64
+	CreatedAt          pgtype.Timestamp
+	UpdatedAt          pgtype.Timestamp
 }
 
 type WorkloadRow struct {

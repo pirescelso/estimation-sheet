@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS costs (
     amount FLOAT8 NOT NULL,
     currency VARCHAR(10) NOT NULL,
     tax FLOAT8 NOT NULL,
+    apply_inflation BOOLEAN NOT NULL,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP,
     UNIQUE (

@@ -9,7 +9,6 @@ import (
 	"github.com/celsopires1999/estimation/internal/domain"
 	"github.com/celsopires1999/estimation/internal/infra/db"
 	"github.com/celsopires1999/estimation/internal/infra/repository"
-	"github.com/celsopires1999/estimation/internal/service"
 	"github.com/celsopires1999/estimation/internal/testutils"
 	"github.com/google/uuid"
 
@@ -46,15 +45,16 @@ func (s *BaselineRepositoryTestSuite) SetupSubTest() {
 		s.T().Fatal(err)
 	}
 
-	service := service.NewEstimationService(s.dbpool)
-	managerParams := testutils.NewUserFakeBuilder().WithManager().Build()
-	manager, err := service.CreateUser(ctx, managerParams)
+	repo := repository.NewEstimationRepositoryPostgres(s.dbpool)
+
+	manager := testutils.NewUserFakeBuilder().WithManager().Build()
+	err = repo.CreateUser(ctx, manager)
 	if err != nil {
 		s.T().Fatal(err)
 	}
 
-	estimatorParams := testutils.NewUserFakeBuilder().WithEstimator().Build()
-	estimator, err := service.CreateUser(ctx, estimatorParams)
+	estimator := testutils.NewUserFakeBuilder().WithEstimator().Build()
+	err = repo.CreateUser(ctx, estimator)
 	if err != nil {
 		s.T().Fatal(err)
 	}

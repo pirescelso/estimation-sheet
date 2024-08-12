@@ -12,13 +12,14 @@ import (
 func TestUnitCost(t *testing.T) {
 	t.Run("should create cost with valid values", func(t *testing.T) {
 		props := domain.NewCostProps{
-			BaselineID:  "2eb1f2e6-bceb-45b2-a938-3d76b18b020f",
-			CostType:    domain.OneTimeCost,
-			Description: "Mão de obra do PMO",
-			Comment:     "estimativa do Ferraz",
-			Amount:      100.00,
-			Tax:         0.00,
-			Currency:    domain.EUR,
+			BaselineID:     "2eb1f2e6-bceb-45b2-a938-3d76b18b020f",
+			CostType:       domain.OneTimeCost,
+			Description:    "Mão de obra do PMO",
+			Comment:        "estimativa do Ferraz",
+			Amount:         100.00,
+			Tax:            0.00,
+			Currency:       domain.EUR,
+			ApplyInflation: true,
 			CostAllocations: []domain.CostAllocationProps{
 				{Year: 2020, Month: time.January, Amount: 60.},
 				{Year: 2020, Month: time.August, Amount: 40.},
@@ -37,6 +38,8 @@ func TestUnitCost(t *testing.T) {
 		assert.Equal(t, props.Comment, cost.Comment)
 		assert.Equal(t, props.Amount, cost.Amount)
 		assert.Equal(t, props.Currency, cost.Currency)
+		assert.Equal(t, props.Tax, cost.Tax)
+		assert.Equal(t, props.ApplyInflation, cost.ApplyInflation)
 		assert.Empty(t, cost.CreatedAt)
 		assert.Empty(t, cost.UpdatedAt)
 	})
@@ -52,13 +55,14 @@ func TestUnitCost(t *testing.T) {
 
 func arrangeInValidCost() *domain.Cost {
 	props := domain.NewCostProps{
-		BaselineID:  "2eb1f2e6-bceb-45b2-a938-3d76b18b020f",
-		CostType:    domain.OneTimeCost,
-		Description: "Mão de obra do PMO",
-		Comment:     "estimativa do Ferraz",
-		Amount:      100.00,
-		Currency:    domain.EUR,
-		Tax:         45.00,
+		BaselineID:     "2eb1f2e6-bceb-45b2-a938-3d76b18b020f",
+		CostType:       domain.OneTimeCost,
+		Description:    "Mão de obra do PMO",
+		Comment:        "estimativa do Ferraz",
+		Amount:         100.00,
+		Currency:       domain.EUR,
+		Tax:            45.00,
+		ApplyInflation: true,
 		CostAllocations: []domain.CostAllocationProps{
 			{Year: 2020, Month: time.January, Amount: 60.00},
 			{Year: 2020, Month: time.August, Amount: 50.00},
