@@ -215,6 +215,7 @@ SELECT
     co.amount AS cost_amount,
     co.currency AS cost_currency,
     co.tax AS cost_tax,
+    co.apply_inflation AS cost_apply_inflation,
     bu.amount AS amount,
     bu.created_at AS created_at,
     bu.updated_at AS updated_at
@@ -226,17 +227,18 @@ ORDER BY co.cost_type, co.description
 `
 
 type FindBudgetsByPortfolioIdWithRelationsRow struct {
-	BudgetID     string
-	PortfolioID  string
-	CostType     string
-	Description  string
-	Comment      pgtype.Text
-	CostAmount   float64
-	CostCurrency string
-	CostTax      float64
-	Amount       float64
-	CreatedAt    pgtype.Timestamp
-	UpdatedAt    pgtype.Timestamp
+	BudgetID           string
+	PortfolioID        string
+	CostType           string
+	Description        string
+	Comment            pgtype.Text
+	CostAmount         float64
+	CostCurrency       string
+	CostTax            float64
+	CostApplyInflation bool
+	Amount             float64
+	CreatedAt          pgtype.Timestamp
+	UpdatedAt          pgtype.Timestamp
 }
 
 func (q *Queries) FindBudgetsByPortfolioIdWithRelations(ctx context.Context, portfolioID string) ([]FindBudgetsByPortfolioIdWithRelationsRow, error) {
@@ -257,6 +259,7 @@ func (q *Queries) FindBudgetsByPortfolioIdWithRelations(ctx context.Context, por
 			&i.CostAmount,
 			&i.CostCurrency,
 			&i.CostTax,
+			&i.CostApplyInflation,
 			&i.Amount,
 			&i.CreatedAt,
 			&i.UpdatedAt,

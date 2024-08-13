@@ -23,8 +23,6 @@ func NewCompetence(code string, name string) *Competence {
 		CompetenceID: uuid.NewString(),
 		Code:         code,
 		Name:         name,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
 	}
 }
 

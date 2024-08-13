@@ -225,6 +225,7 @@ Connection: close
   "amount": 180000,
   "currency": "BRL",
   "tax": 0,
+  "apply_inflation": true,
   "cost_allocations": [
     {
       "year": 2024,
@@ -278,6 +279,7 @@ Connection: close
   "amount": 80000,
   "currency": "EUR",
   "tax": 23.1,
+  "apply_inflation": false,
   "cost_allocations": [
     {
       "year": 2024,
@@ -314,6 +316,7 @@ Connection: close
       "amount": 80000,
       "currency": "EUR",
       "tax": 23.1,
+      "apply_inflation": false,
       "cost_allocations": [
         {
           "year": 2024,
@@ -338,6 +341,7 @@ Connection: close
       "amount": 180000,
       "currency": "BRL",
       "tax": 0,
+      "apply_inflation": true,
       "cost_allocations": [
         {
           "year": 2024,
@@ -381,7 +385,7 @@ Connection: close
 HTTP/1.1 200 OK
 Content-Type: application/json
 Date: Sun, 11 Aug 2024 15:40:42 GMT
-Content-Length: 414
+Content-Length: 438
 Connection: close
 
 {
@@ -393,6 +397,7 @@ Connection: close
   "amount": 80000,
   "currency": "USD",
   "tax": 23,
+  "apply_inflation": false,
   "cost_allocations": [
     {
       "year": 2024,
@@ -1068,6 +1073,7 @@ Transfer-Encoding: chunked
       "cost_amount": 80000,
       "cost_currency": "USD",
       "cost_tax": 23,
+      "cost_apply_inflation": false,
       "amount": 492000,
       "budget_allocations": [
         {
@@ -1093,6 +1099,7 @@ Transfer-Encoding: chunked
       "cost_amount": 180000,
       "cost_currency": "BRL",
       "cost_tax": 0,
+      "cost_apply_inflation": true,
       "amount": 187800,
       "budget_allocations": [
         {
@@ -1217,6 +1224,7 @@ Transfer-Encoding: chunked
       "cost_amount": 80000,
       "cost_currency": "USD",
       "cost_tax": 23,
+      "cost_apply_inflation": false,
       "amount": 546120,
       "budget_allocations": [
         {
@@ -1242,6 +1250,7 @@ Transfer-Encoding: chunked
       "cost_amount": 180000,
       "cost_currency": "BRL",
       "cost_tax": 0,
+      "cost_apply_inflation": true,
       "amount": 189360,
       "budget_allocations": [
         {

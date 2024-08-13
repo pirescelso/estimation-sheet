@@ -163,15 +163,14 @@ func (s *CreatePortfolioUseCaseTestSuite) TestIntegrationCreatePortfolio() {
 }
 
 func (s *CreatePortfolioUseCaseTestSuite) createDependenciesBaseline(ctx context.Context) {
-	userParams := testutils.NewUserFakeBuilder().WithManager().Build()
-	createdUser, err := s.service.CreateUser(ctx, userParams)
+	user := testutils.NewUserFakeBuilder().WithManager().Build()
+	err := s.repository.CreateUser(ctx, user)
 	if err != nil {
 		s.T().Fatal(err)
 	}
-
 	s.baseline = testutils.NewBaselineFakeBuilder().
-		WithManagerID(createdUser.UserID).
-		WithEstimatorID(createdUser.UserID).
+		WithManagerID(user.UserID).
+		WithEstimatorID(user.UserID).
 		WithStartDate(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)).
 		Build()
 
@@ -188,6 +187,7 @@ func (s *CreatePortfolioUseCaseTestSuite) createDependencies8Months(ctx context.
 		WithBaselineID(s.baseline.BaselineID).
 		WithAmount(880.30).
 		WithCurrency("BRL").
+		WithApplyInflation(true).
 		WithCostAllocationProps([]domain.CostAllocationProps{
 			{Year: 2022, Month: time.January, Amount: 610.15},
 			{Year: 2022, Month: time.August, Amount: 270.15},
@@ -199,6 +199,7 @@ func (s *CreatePortfolioUseCaseTestSuite) createDependencies8Months(ctx context.
 		WithBaselineID(s.baseline.BaselineID).
 		WithAmount(220.20).
 		WithCurrency("EUR").
+		WithApplyInflation(false).
 		WithCostAllocationProps([]domain.CostAllocationProps{
 			{Year: 2023, Month: time.February, Amount: 120.15},
 			{Year: 2023, Month: time.December, Amount: 100.05},
@@ -220,6 +221,7 @@ func (s *CreatePortfolioUseCaseTestSuite) createDependenciesBRL(ctx context.Cont
 		WithAmount(880.30).
 		WithCurrency("BRL").
 		WithTax(10.25).
+		WithApplyInflation(true).
 		WithCostAllocationProps([]domain.CostAllocationProps{
 			{Year: 2022, Month: time.August, Amount: 880.30},
 		}).
@@ -250,6 +252,7 @@ func (s *CreatePortfolioUseCaseTestSuite) createDependenciesRC(ctx context.Conte
 		WithAmount(100_000.00).
 		WithCurrency("BRL").
 		WithTax(0.00).
+		WithApplyInflation(true).
 		WithCostAllocationProps([]domain.CostAllocationProps{
 			{Year: 2024, Month: time.August, Amount: 100_000.00},
 		}).

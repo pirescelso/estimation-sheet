@@ -6,18 +6,29 @@ import (
 
 	"github.com/celsopires1999/estimation/internal/common"
 	"github.com/celsopires1999/estimation/internal/service"
+	"github.com/celsopires1999/estimation/internal/usecase"
 )
 
 type usersHandler struct {
-	service *service.EstimationService
+	createUserUseCase *usecase.CreateUserUseCase
+	updateUserUseCase *usecase.UpdateUserUseCase
+	getUserUseCase    *usecase.GetUserUseCase
+	deleteUserUseCase *usecase.DeleteUserUseCase
+	service           *service.EstimationService
 }
 
-func newUsersHandler(service *service.EstimationService) *usersHandler {
-	return &usersHandler{service}
+func newUsersHandler(
+	createUserUseCase *usecase.CreateUserUseCase,
+	updateUserUseCase *usecase.UpdateUserUseCase,
+	getUserUseCase *usecase.GetUserUseCase,
+	deleteUserUseCase *usecase.DeleteUserUseCase,
+	service *service.EstimationService,
+) *usersHandler {
+	return &usersHandler{createUserUseCase, updateUserUseCase, getUserUseCase, deleteUserUseCase, service}
 }
 
 func (h *usersHandler) createUser(w http.ResponseWriter, r *http.Request) {
-	var input service.CreateUserInputDTO
+	var input usecase.CreateUserInputDTO
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		writeError(w, http.StatusBadRequest, err)
 		return
@@ -28,7 +39,7 @@ func (h *usersHandler) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	output, err := h.service.CreateUser(r.Context(), input)
+	output, err := h.createUserUseCase.Execute(r.Context(), input)
 	if err != nil {
 		writeDomainError(w, err)
 		return
@@ -39,7 +50,7 @@ func (h *usersHandler) createUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *usersHandler) updateUser(w http.ResponseWriter, r *http.Request) {
 	userID := r.PathValue("userID")
-	var input service.UpdateUserInputDTO
+	var input usecase.UpdateUserInputDTO
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		writeError(w, http.StatusBadRequest, err)
 		return
@@ -52,7 +63,7 @@ func (h *usersHandler) updateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	output, err := h.service.UpdateUser(r.Context(), input)
+	output, err := h.updateUserUseCase.Execute(r.Context(), input)
 	if err != nil {
 		writeDomainError(w, err)
 		return
@@ -62,9 +73,16 @@ func (h *usersHandler) updateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *usersHandler) getUser(w http.ResponseWriter, r *http.Request) {
-	userID := r.PathValue("userID")
+	input := usecase.GetUserInputDTO{
+		UserID: r.PathValue("userID"),
+	}
 
-	output, err := h.service.GetUser(r.Context(), userID)
+	if errors := common.ValidatePayload(input); errors != nil {
+		writeValidationError(w, errors)
+		return
+	}
+
+	output, err := h.getUserUseCase.Execute(r.Context(), input)
 	if err != nil {
 		writeDomainError(w, err)
 		return
@@ -74,14 +92,22 @@ func (h *usersHandler) getUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *usersHandler) deleteUser(w http.ResponseWriter, r *http.Request) {
-	userID := r.PathValue("userID")
+	input := usecase.DeleteUserInputDTO{
+		UserID: r.PathValue("userID"),
+	}
 
-	if err := h.service.DeleteUser(r.Context(), userID); err != nil {
+	if errors := common.ValidatePayload(input); errors != nil {
+		writeValidationError(w, errors)
+		return
+	}
+
+	output, err := h.deleteUserUseCase.Execute(r.Context(), input)
+	if err != nil {
 		writeDomainError(w, err)
 		return
 	}
 
-	writeJSON(w, http.StatusNoContent, nil)
+	writeJSON(w, http.StatusNoContent, output)
 }
 
 func (h *usersHandler) listUsers(w http.ResponseWriter, r *http.Request) {

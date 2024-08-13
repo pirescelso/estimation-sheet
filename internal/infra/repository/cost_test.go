@@ -10,7 +10,6 @@ import (
 	"github.com/celsopires1999/estimation/internal/domain"
 	"github.com/celsopires1999/estimation/internal/infra/db"
 	"github.com/celsopires1999/estimation/internal/infra/repository"
-	"github.com/celsopires1999/estimation/internal/service"
 	"github.com/celsopires1999/estimation/internal/testutils"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -45,20 +44,20 @@ func (s *CostRepositoryTestSuite) SetupSubTest() {
 		s.T().Fatal(err)
 	}
 
-	baselineRepo := repository.NewEstimationRepositoryPostgres(s.dbpool)
-	service := service.NewEstimationService(s.dbpool)
-	userParams := testutils.NewUserFakeBuilder().WithManager().Build()
-	createdUser, err := service.CreateUser(ctx, userParams)
+	repo := repository.NewEstimationRepositoryPostgres(s.dbpool)
+
+	user := testutils.NewUserFakeBuilder().WithManager().Build()
+	err = repo.CreateUser(ctx, user)
 	if err != nil {
 		s.T().Fatal(err)
 	}
 
 	s.baseline = testutils.NewBaselineFakeBuilder().
-		WithManagerID(createdUser.UserID).
-		WithEstimatorID(createdUser.UserID).
+		WithManagerID(user.UserID).
+		WithEstimatorID(user.UserID).
 		Build()
 
-	err = baselineRepo.CreateBaseline(ctx, s.baseline)
+	err = repo.CreateBaseline(ctx, s.baseline)
 	if err != nil {
 		s.T().Fatal(err)
 	}
@@ -76,28 +75,31 @@ func (s *CostRepositoryTestSuite) TestIntegrationCreateCost() {
 		comment         string
 		amount          float64
 		currency        domain.Currency
+		applyInflation  bool
 		costAllocations []domain.CostAllocationProps
 	}
 	testCases := []testCase{
 		{
-			label:       "should create cost one time cost",
-			costType:    domain.OneTimeCost,
-			description: "Mão de obra do PMO",
-			comment:     "estimativa do Ferraz",
-			amount:      100.0,
-			currency:    domain.EUR,
+			label:          "should create cost one time cost",
+			costType:       domain.OneTimeCost,
+			description:    "Mão de obra do PMO",
+			comment:        "estimativa do Ferraz",
+			amount:         100.0,
+			currency:       domain.EUR,
+			applyInflation: true,
 			costAllocations: []domain.CostAllocationProps{
 				{Year: 2020, Month: time.January, Amount: 60.},
 				{Year: 2020, Month: time.August, Amount: 40.},
 			},
 		},
 		{
-			label:       "should create cost running cost",
-			costType:    domain.RunningCost,
-			description: "aluguel de espaço de armazenamento",
-			comment:     "preço mensal",
-			amount:      1000.30,
-			currency:    domain.USD,
+			label:          "should create cost running cost",
+			costType:       domain.RunningCost,
+			description:    "aluguel de espaço de armazenamento",
+			comment:        "preço mensal",
+			amount:         1000.30,
+			currency:       domain.USD,
+			applyInflation: false,
 			costAllocations: []domain.CostAllocationProps{
 				{Year: 2020, Month: time.January, Amount: 600.30},
 				{Year: 2020, Month: time.August, Amount: 400.},
@@ -125,6 +127,7 @@ func (s *CostRepositoryTestSuite) TestIntegrationCreateCost() {
 					Comment:         tc.comment,
 					Amount:          tc.amount,
 					Currency:        tc.currency,
+					ApplyInflation:  tc.applyInflation,
 					CostAllocations: tc.costAllocations,
 				}
 				cost := domain.NewCost(props)
@@ -149,6 +152,7 @@ func (s *CostRepositoryTestSuite) TestIntegrationCreateCost() {
 				s.Equal(cost.Comment, model.Comment)
 				s.Equal(cost.Amount, model.Amount)
 				s.Equal(cost.Currency, model.Currency)
+				s.Equal(cost.ApplyInflation, model.ApplyInflation)
 				return err
 			})
 			s.Nil(err)
@@ -164,16 +168,18 @@ func (s *CostRepositoryTestSuite) TestIntegrationCreateCostError() {
 		comment         string
 		amount          float64
 		currency        domain.Currency
+		applyInflation  bool
 		costAllocations []domain.CostAllocationProps
 	}
 	testCases := []testCase{
 		{
-			label:       "should not allow duplicated one time cost",
-			costType:    domain.OneTimeCost,
-			description: "Mão de obra do PMO",
-			comment:     "estimativa do Ferraz",
-			amount:      100.0,
-			currency:    domain.EUR,
+			label:          "should not allow duplicated one time cost",
+			costType:       domain.OneTimeCost,
+			description:    "Mão de obra do PMO",
+			comment:        "estimativa do Ferraz",
+			amount:         100.0,
+			currency:       domain.EUR,
+			applyInflation: false,
 			costAllocations: []domain.CostAllocationProps{
 				{Year: 2020, Month: time.January, Amount: 60.},
 				{Year: 2020, Month: time.August, Amount: 40.},
@@ -201,6 +207,7 @@ func (s *CostRepositoryTestSuite) TestIntegrationCreateCostError() {
 					Comment:         tc.comment,
 					Amount:          tc.amount,
 					Currency:        tc.currency,
+					ApplyInflation:  tc.applyInflation,
 					CostAllocations: tc.costAllocations,
 				}
 				cost := domain.NewCost(props)
@@ -215,7 +222,7 @@ func (s *CostRepositoryTestSuite) TestIntegrationCreateCostError() {
 				}
 
 				expectedErr := common.NewConflictError(fmt.Errorf("cost type: '%s' description: '%s' already exists in the baseline id: '%s'",
-					string(cost.CostType), cost.Description, cost.BaselineID))
+					cost.CostType.String(), cost.Description, cost.BaselineID))
 
 				err = costRepo.CreateCost(ctx, cost)
 				s.EqualError(err, expectedErr.Error())
@@ -281,7 +288,7 @@ func (s *CostRepositoryTestSuite) TestIntegrationUpdateCostError() {
 			err = costRepo.UpdateCost(ctx, costs[1])
 
 			expectedErr := common.NewConflictError(fmt.Errorf("cost type: '%s' description: '%s' already exists in the baseline id: '%s'",
-				string(costs[1].CostType), costs[1].Description, costs[1].BaselineID))
+				costs[1].CostType.String(), costs[1].Description, costs[1].BaselineID))
 
 			s.EqualError(err, expectedErr.Error())
 			return err

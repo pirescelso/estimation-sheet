@@ -8,7 +8,6 @@ import (
 	"github.com/celsopires1999/estimation/internal/domain"
 	"github.com/celsopires1999/estimation/internal/infra/db"
 	"github.com/celsopires1999/estimation/internal/infra/repository"
-	"github.com/celsopires1999/estimation/internal/service"
 	"github.com/celsopires1999/estimation/internal/testutils"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -186,14 +185,13 @@ func (s *EffortRepositoryTestSuite) TestEffort() {
 
 }
 
-func (s *EffortRepositoryTestSuite) arrangeManager(ctx context.Context) *service.CreateUserOutputDTO {
-	service := service.NewEstimationService(s.dbpool)
-	userParams := testutils.NewUserFakeBuilder().WithManager().Build()
-	createdUser, err := service.CreateUser(ctx, userParams)
+func (s *EffortRepositoryTestSuite) arrangeManager(ctx context.Context) *domain.User {
+	user := testutils.NewUserFakeBuilder().WithManager().Build()
+	err := s.repo.CreateUser(ctx, user)
 	if err != nil {
 		s.T().Fatal(err)
 	}
-	return createdUser
+	return user
 }
 
 func (s *EffortRepositoryTestSuite) arrangeBaseline(ctx context.Context, managerID string, estimatorID string) *domain.Baseline {

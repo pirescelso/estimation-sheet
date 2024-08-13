@@ -58,6 +58,7 @@ type costInput struct {
 	Amount          float64               `json:"amount"`
 	Currency        string                `json:"currency"`
 	Tax             float64               `json:"tax"`
+	ApplyInflation  bool                  `json:"apply_inflation"`
 	CostAllocations []costAllocationInput `json:"cost_allocations"`
 }
 
@@ -76,6 +77,7 @@ type costOutput struct {
 	Amount          float64                `json:"amount"`
 	Currency        string                 `json:"currency"`
 	Tax             float64                `json:"tax"`
+	ApplyInflation  bool                   `json:"apply_inflation"`
 	CostAllocations []costAllocationOutput `json:"cost_allocations"`
 	CreatedAt       time.Time              `json:"created_at"`
 	UpdatedAt       time.Time              `json:"updated_at"`

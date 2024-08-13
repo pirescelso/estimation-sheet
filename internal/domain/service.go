@@ -101,6 +101,9 @@ func (s *PortfolioService) GeneratePortfolio() (*Portfolio, []*Budget, []*Worklo
 
 func (s *PortfolioService) calculateBudgetAllocation(cost *Cost, costAllocation CostAllocation, budgetAllocationDate time.Time) (float64, error) {
 	if cost.Currency.IsBRL() {
+		if !cost.ApplyInflation {
+			return common.RoundToTwoDecimals(s.applyTax(cost, costAllocation)), nil
+		}
 		amount, err := s.inflation.ApplyInflation(s.applyTax(cost, costAllocation), s.baseline.StartDate.Year(), budgetAllocationDate.Year())
 		if err != nil {
 			return 0.0, err

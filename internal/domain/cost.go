@@ -11,6 +11,10 @@ import (
 
 type CostType string
 
+func (ct CostType) String() string {
+	return string(ct)
+}
+
 const (
 	OneTimeCost CostType = "one_time"
 	RunningCost CostType = "running"
@@ -26,6 +30,7 @@ type Cost struct {
 	Amount          float64          `validate:"required"`
 	Currency        Currency         `validate:"required"`
 	Tax             float64          `validate:"gte=0"`
+	ApplyInflation  bool             `validate:"-"`
 	CostAllocations []CostAllocation `validate:"required"`
 	CreatedAt       time.Time        `validate:"-"`
 	UpdatedAt       time.Time        `validate:"-"`
@@ -46,6 +51,7 @@ type NewCostProps struct {
 	Amount          float64
 	Currency        Currency
 	Tax             float64
+	ApplyInflation  bool
 	CostAllocations []CostAllocationProps
 }
 
@@ -60,6 +66,7 @@ func NewCost(props NewCostProps) *Cost {
 		Amount:          props.Amount,
 		Currency:        props.Currency,
 		Tax:             props.Tax,
+		ApplyInflation:  props.ApplyInflation,
 		CostAllocations: costAllocations,
 	}
 }
@@ -74,6 +81,7 @@ func RestoreCost(props RestoreCostProps) *Cost {
 		Amount:          props.Amount,
 		Currency:        props.Currency,
 		Tax:             props.Tax,
+		ApplyInflation:  props.ApplyInflation,
 		CostAllocations: props.CostAllocations,
 		CreatedAt:       props.CreatedAt,
 		UpdatedAt:       props.UpdatedAt,
@@ -157,6 +165,13 @@ func (c *Cost) ChangeTax(tax *float64) {
 		return
 	}
 	c.Tax = *tax
+}
+
+func (c *Cost) ChangeApplyInflation(applyInflation *bool) {
+	if applyInflation == nil {
+		return
+	}
+	c.ApplyInflation = *applyInflation
 }
 
 func (c *Cost) ChangeCostAllocations(costAllocationProps []CostAllocationProps) {

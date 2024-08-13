@@ -9,6 +9,7 @@ INSERT INTO
         amount,
         currency,
         tax,
+        apply_inflation,
         created_at
     )
 VALUES (
@@ -20,7 +21,8 @@ VALUES (
         $6,
         $7,
         $8,
-        $9
+        $9,
+        $10
     );
 
 -- name: BulkInsertCost :exec
@@ -34,6 +36,7 @@ INSERT INTO
         amount,
         currency,
         tax,
+        apply_inflation,
         created_at
     )
 VALUES (
@@ -45,7 +48,8 @@ VALUES (
         unnest($6::float8[]),
         unnest($7::text []),
         unnest($8::float8[]),
-        unnest($9::timestamp[])
+        unnest($9::boolean[]),
+        unnest($10::timestamp[])
     );
 
 -- name: FindCostById :one
@@ -61,7 +65,8 @@ SET
     amount = $6,
     currency = $7,
     tax = $8,
-    updated_at = $9
+    apply_inflation = $9,
+    updated_at = $10
 WHERE
     cost_id = $1;
 

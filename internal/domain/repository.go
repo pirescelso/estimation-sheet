@@ -3,6 +3,7 @@ package domain
 import "context"
 
 type EstimationRepository interface {
+	UserRepository
 	BaselineRepository
 	CostRepository
 	CompetenceRepository
@@ -12,6 +13,13 @@ type EstimationRepository interface {
 	BudgetRepository
 	WorkloadRepository
 	Validator
+}
+
+type UserRepository interface {
+	CreateUser(ctx context.Context, user *User) error
+	GetUser(ctx context.Context, userID string) (*User, error)
+	UpdateUser(ctx context.Context, user *User) error
+	DeleteUser(ctx context.Context, userID string) error
 }
 
 type BaselineRepository interface {

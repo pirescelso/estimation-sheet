@@ -126,6 +126,7 @@ Content-Type: application/json
     "amount": 180000,
     "currency": "BRL",
     "tax": 0.00,
+    "apply_inflation": true,
     "cost_allocations": [
         {
             "year": 2024,
@@ -172,6 +173,7 @@ Content-Type: application/json
     "amount": 80000,
     "currency": "EUR",
     "tax": 23.10,
+    "apply_inflation": false,
     "cost_allocations": [
         {
             "year": 2024,

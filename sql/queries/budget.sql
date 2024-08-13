@@ -98,6 +98,7 @@ SELECT
     co.amount AS cost_amount,
     co.currency AS cost_currency,
     co.tax AS cost_tax,
+    co.apply_inflation AS cost_apply_inflation,
     bu.amount AS amount,
     bu.created_at AS created_at,
     bu.updated_at AS updated_at

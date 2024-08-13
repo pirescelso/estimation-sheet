@@ -19,10 +19,15 @@ func Handler(ctx context.Context, dbpool *pgxpool.Pool) *http.ServeMux {
 	})
 	repository := repository.NewEstimationRepositoryPostgres(dbpool)
 
-	// Services (CRUDs & Queries)
+	// Services for Queries
 	service := service.NewEstimationService(dbpool)
 
 	// UseCases
+	createUserUseCase := usecase.NewCreateUserUseCase(repository)
+	getUserUseCase := usecase.NewGetUserUseCase(repository)
+	updateUserUseCase := usecase.NewUpdateUserUseCase(repository)
+	deleteUserUseCase := usecase.NewDeleteUserUseCase(repository)
+
 	createPlanUseCase := usecase.NewCreatePlanUseCase(repository)
 	getPlanUseCase := usecase.NewGetPlanUseCase(repository)
 	updatePlanUseCase := usecase.NewUpdatePlanUseCase(repository)
@@ -51,7 +56,7 @@ func Handler(ctx context.Context, dbpool *pgxpool.Pool) *http.ServeMux {
 	deletePortfolioUseCase := usecase.NewDeletePortfolioUseCase(txm)
 
 	// Handlers
-	usersHandler := newUsersHandler(service)
+	usersHandler := newUsersHandler(createUserUseCase, updateUserUseCase, getUserUseCase, deleteUserUseCase, service)
 	plansHandler := newPlansHandler(createPlanUseCase, getPlanUseCase, updatePlanUseCase, deletePlanUseCase, service)
 	baselinesHandler := newBaselinesHandler(createBaselineUseCase, updateBaselineUseCase, deleteBaselineUseCase, getCostsByBaselineIDUseCase, getEffortsByBaselineIDUseCase, service)
 	costsHandler := newCostsHandler(createCostUsecase, updateCostUseCase, deleteCostUseCase)

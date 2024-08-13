@@ -209,12 +209,13 @@ func (s *E2EScenarioSuite) postCostsPO() {
 	c := http.Client{}
 
 	input := costInput{
-		CostType:    "one_time",
-		Description: "Mão de obra do PO",
-		Comment:     "estimativa do PO",
-		Amount:      180_000,
-		Currency:    "BRL",
-		Tax:         0.00,
+		CostType:       "one_time",
+		Description:    "Mão de obra do PO",
+		Comment:        "estimativa do PO",
+		Amount:         180_000,
+		Currency:       "BRL",
+		Tax:            0.00,
+		ApplyInflation: true,
 		CostAllocations: []costAllocationInput{
 			{
 				Year:   2024,
@@ -271,6 +272,7 @@ func (s *E2EScenarioSuite) postCostsPO() {
 	s.Equal(input.Amount, output.Amount)
 	s.Equal(input.Currency, output.Currency)
 	s.Equal(input.Tax, output.Tax)
+	s.Equal(input.ApplyInflation, output.ApplyInflation)
 	s.Len(output.CostAllocations, len(input.CostAllocations))
 	for i, a := range output.CostAllocations {
 		s.Equal(input.CostAllocations[i].Year, a.Year)
@@ -287,12 +289,13 @@ func (s *E2EScenarioSuite) postCostsConsulting() {
 	c := http.Client{}
 
 	input := costInput{
-		CostType:    "one_time",
-		Description: "External Consulting",
-		Comment:     "estimativa de consultoria externa",
-		Amount:      80_000,
-		Currency:    "EUR",
-		Tax:         23.10,
+		CostType:       "one_time",
+		Description:    "External Consulting",
+		Comment:        "estimativa de consultoria externa",
+		Amount:         80_000,
+		Currency:       "EUR",
+		Tax:            23.10,
+		ApplyInflation: false,
 		CostAllocations: []costAllocationInput{
 			{
 				Year:   2024,
@@ -329,6 +332,7 @@ func (s *E2EScenarioSuite) postCostsConsulting() {
 	s.Equal(input.Amount, output.Amount)
 	s.Equal(input.Currency, output.Currency)
 	s.Equal(input.Tax, output.Tax)
+	s.Equal(input.ApplyInflation, output.ApplyInflation)
 	s.Len(output.CostAllocations, len(input.CostAllocations))
 	for i, a := range output.CostAllocations {
 		s.Equal(input.CostAllocations[i].Year, a.Year)
@@ -595,6 +599,7 @@ func (s *E2EScenarioSuite) getPortfolioBP() {
 			cmpopts.IgnoreFields(portfolioOutput{}, "PortfolioID", "CreatedAt", "UpdatedAt"),
 			cmpopts.IgnoreFields(budgetOutput{}, "BudgetID", "PortfolioID", "CreatedAt", "UpdatedAt"),
 		))
+		s.Fail("Portfolio is not equal to expected")
 	}
 }
 

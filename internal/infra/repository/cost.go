@@ -18,15 +18,16 @@ import (
 
 func (r *estimationRepositoryPostgres) CreateCost(ctx context.Context, cost *domain.Cost) error {
 	err := r.queries.InsertCost(ctx, db.InsertCostParams{
-		CostID:      cost.CostID,
-		BaselineID:  cost.BaselineID,
-		CostType:    string(cost.CostType),
-		Description: cost.Description,
-		Comment:     pgtype.Text{String: cost.Comment, Valid: true},
-		Amount:      cost.Amount,
-		Currency:    string(cost.Currency),
-		Tax:         cost.Tax,
-		CreatedAt:   pgtype.Timestamp{Time: time.Now(), Valid: true},
+		CostID:         cost.CostID,
+		BaselineID:     cost.BaselineID,
+		CostType:       cost.CostType.String(),
+		Description:    cost.Description,
+		Comment:        pgtype.Text{String: cost.Comment, Valid: true},
+		Amount:         cost.Amount,
+		Currency:       cost.Currency.String(),
+		Tax:            cost.Tax,
+		ApplyInflation: cost.ApplyInflation,
+		CreatedAt:      pgtype.Timestamp{Time: time.Now(), Valid: true},
 	})
 
 	if err != nil {
@@ -57,13 +58,14 @@ func (r *estimationRepositoryPostgres) CreateCostMany(ctx context.Context, costs
 	for _, cost := range costs {
 		costsParams.Column1 = append(costsParams.Column1, cost.CostID)
 		costsParams.Column2 = append(costsParams.Column2, cost.BaselineID)
-		costsParams.Column3 = append(costsParams.Column3, string(cost.CostType))
+		costsParams.Column3 = append(costsParams.Column3, cost.CostType.String())
 		costsParams.Column4 = append(costsParams.Column4, cost.Description)
 		costsParams.Column5 = append(costsParams.Column5, cost.Comment)
 		costsParams.Column6 = append(costsParams.Column6, cost.Amount)
-		costsParams.Column7 = append(costsParams.Column7, string(cost.Currency))
+		costsParams.Column7 = append(costsParams.Column7, cost.Currency.String())
 		costsParams.Column8 = append(costsParams.Column8, cost.Tax)
-		costsParams.Column9 = append(costsParams.Column9, pgtype.Timestamp{Time: time.Now(), Valid: true})
+		costsParams.Column9 = append(costsParams.Column9, cost.ApplyInflation)
+		costsParams.Column10 = append(costsParams.Column10, pgtype.Timestamp{Time: time.Now(), Valid: true})
 
 		for _, allocation := range cost.CostAllocations {
 			costAllocations.Column1 = append(costAllocations.Column1, uuid.New().String())
@@ -127,6 +129,7 @@ func (r *estimationRepositoryPostgres) GetCost(ctx context.Context, costID strin
 		Amount:          costModel.Amount,
 		Currency:        domain.Currency(costModel.Currency),
 		Tax:             costModel.Tax,
+		ApplyInflation:  costModel.ApplyInflation,
 		CostAllocations: allocations,
 		CreatedAt:       costModel.CreatedAt.Time,
 		UpdatedAt:       costModel.UpdatedAt.Time,
@@ -143,15 +146,16 @@ func (r *estimationRepositoryPostgres) GetCost(ctx context.Context, costID strin
 
 func (r *estimationRepositoryPostgres) UpdateCost(ctx context.Context, cost *domain.Cost) error {
 	err := r.queries.UpdateCost(ctx, db.UpdateCostParams{
-		CostID:      cost.CostID,
-		BaselineID:  cost.BaselineID,
-		CostType:    string(cost.CostType),
-		Description: cost.Description,
-		Comment:     pgtype.Text{String: cost.Comment, Valid: true},
-		Amount:      cost.Amount,
-		Currency:    string(cost.Currency),
-		Tax:         cost.Tax,
-		UpdatedAt:   pgtype.Timestamp{Time: time.Now(), Valid: true},
+		CostID:         cost.CostID,
+		BaselineID:     cost.BaselineID,
+		CostType:       cost.CostType.String(),
+		Description:    cost.Description,
+		Comment:        pgtype.Text{String: cost.Comment, Valid: true},
+		Amount:         cost.Amount,
+		Currency:       cost.Currency.String(),
+		Tax:            cost.Tax,
+		ApplyInflation: cost.ApplyInflation,
+		UpdatedAt:      pgtype.Timestamp{Time: time.Now(), Valid: true},
 	})
 
 	if err != nil {
@@ -226,6 +230,7 @@ func (r *estimationRepositoryPostgres) GetCostManyByBaselineID(ctx context.Conte
 			Amount:          costModel.Amount,
 			Currency:        domain.Currency(costModel.Currency),
 			Tax:             costModel.Tax,
+			ApplyInflation:  costModel.ApplyInflation,
 			CostAllocations: allocs,
 			CreatedAt:       costModel.CreatedAt.Time,
 			UpdatedAt:       costModel.UpdatedAt.Time,
@@ -245,7 +250,7 @@ func costCheckRelationsError(cost *domain.Cost, err error) error {
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
 		if pgErr.Code == "23505" {
-			return common.NewConflictError(fmt.Errorf("cost type: '%s' description: '%s' already exists in the baseline id: '%s'", string(cost.CostType), cost.Description, cost.BaselineID))
+			return common.NewConflictError(fmt.Errorf("cost type: '%s' description: '%s' already exists in the baseline id: '%s'", cost.CostType.String(), cost.Description, cost.BaselineID))
 		}
 		return common.NewConflictError(err)
 	}

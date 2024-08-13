@@ -22,6 +22,7 @@ INSERT INTO
         amount,
         currency,
         tax,
+        apply_inflation,
         created_at
     )
 VALUES (
@@ -33,20 +34,22 @@ VALUES (
         unnest($6::float8[]),
         unnest($7::text []),
         unnest($8::float8[]),
-        unnest($9::timestamp[])
+        unnest($9::boolean[]),
+        unnest($10::timestamp[])
     )
 `
 
 type BulkInsertCostParams struct {
-	Column1 []string
-	Column2 []string
-	Column3 []string
-	Column4 []string
-	Column5 []string
-	Column6 []float64
-	Column7 []string
-	Column8 []float64
-	Column9 []pgtype.Timestamp
+	Column1  []string
+	Column2  []string
+	Column3  []string
+	Column4  []string
+	Column5  []string
+	Column6  []float64
+	Column7  []string
+	Column8  []float64
+	Column9  []bool
+	Column10 []pgtype.Timestamp
 }
 
 func (q *Queries) BulkInsertCost(ctx context.Context, arg BulkInsertCostParams) error {
@@ -60,6 +63,7 @@ func (q *Queries) BulkInsertCost(ctx context.Context, arg BulkInsertCostParams) 
 		arg.Column7,
 		arg.Column8,
 		arg.Column9,
+		arg.Column10,
 	)
 	return err
 }
@@ -102,7 +106,7 @@ func (q *Queries) BulkInsertCostAllocation(ctx context.Context, arg BulkInsertCo
 }
 
 const deleteCost = `-- name: DeleteCost :one
-DELETE FROM costs WHERE cost_id = $1 RETURNING cost_id, baseline_id, cost_type, description, comment, amount, currency, tax, created_at, updated_at
+DELETE FROM costs WHERE cost_id = $1 RETURNING cost_id, baseline_id, cost_type, description, comment, amount, currency, tax, apply_inflation, created_at, updated_at
 `
 
 func (q *Queries) DeleteCost(ctx context.Context, costID string) (Cost, error) {
@@ -117,6 +121,7 @@ func (q *Queries) DeleteCost(ctx context.Context, costID string) (Cost, error) {
 		&i.Amount,
 		&i.Currency,
 		&i.Tax,
+		&i.ApplyInflation,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -171,7 +176,7 @@ func (q *Queries) FindCostAllocationsByCostId(ctx context.Context, costID string
 }
 
 const findCostById = `-- name: FindCostById :one
-SELECT cost_id, baseline_id, cost_type, description, comment, amount, currency, tax, created_at, updated_at FROM costs WHERE cost_id = $1
+SELECT cost_id, baseline_id, cost_type, description, comment, amount, currency, tax, apply_inflation, created_at, updated_at FROM costs WHERE cost_id = $1
 `
 
 func (q *Queries) FindCostById(ctx context.Context, costID string) (Cost, error) {
@@ -186,6 +191,7 @@ func (q *Queries) FindCostById(ctx context.Context, costID string) (Cost, error)
 		&i.Amount,
 		&i.Currency,
 		&i.Tax,
+		&i.ApplyInflation,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -193,7 +199,7 @@ func (q *Queries) FindCostById(ctx context.Context, costID string) (Cost, error)
 }
 
 const findCostsByBaselineId = `-- name: FindCostsByBaselineId :many
-SELECT cost_id, baseline_id, cost_type, description, comment, amount, currency, tax, created_at, updated_at
+SELECT cost_id, baseline_id, cost_type, description, comment, amount, currency, tax, apply_inflation, created_at, updated_at
 FROM costs
 WHERE
     baseline_id = $1
@@ -218,6 +224,7 @@ func (q *Queries) FindCostsByBaselineId(ctx context.Context, baselineID string) 
 			&i.Amount,
 			&i.Currency,
 			&i.Tax,
+			&i.ApplyInflation,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -242,6 +249,7 @@ INSERT INTO
         amount,
         currency,
         tax,
+        apply_inflation,
         created_at
     )
 VALUES (
@@ -253,20 +261,22 @@ VALUES (
         $6,
         $7,
         $8,
-        $9
+        $9,
+        $10
     )
 `
 
 type InsertCostParams struct {
-	CostID      string
-	BaselineID  string
-	CostType    string
-	Description string
-	Comment     pgtype.Text
-	Amount      float64
-	Currency    string
-	Tax         float64
-	CreatedAt   pgtype.Timestamp
+	CostID         string
+	BaselineID     string
+	CostType       string
+	Description    string
+	Comment        pgtype.Text
+	Amount         float64
+	Currency       string
+	Tax            float64
+	ApplyInflation bool
+	CreatedAt      pgtype.Timestamp
 }
 
 func (q *Queries) InsertCost(ctx context.Context, arg InsertCostParams) error {
@@ -279,6 +289,7 @@ func (q *Queries) InsertCost(ctx context.Context, arg InsertCostParams) error {
 		arg.Amount,
 		arg.Currency,
 		arg.Tax,
+		arg.ApplyInflation,
 		arg.CreatedAt,
 	)
 	return err
@@ -325,21 +336,23 @@ SET
     amount = $6,
     currency = $7,
     tax = $8,
-    updated_at = $9
+    apply_inflation = $9,
+    updated_at = $10
 WHERE
     cost_id = $1
 `
 
 type UpdateCostParams struct {
-	CostID      string
-	BaselineID  string
-	CostType    string
-	Description string
-	Comment     pgtype.Text
-	Amount      float64
-	Currency    string
-	Tax         float64
-	UpdatedAt   pgtype.Timestamp
+	CostID         string
+	BaselineID     string
+	CostType       string
+	Description    string
+	Comment        pgtype.Text
+	Amount         float64
+	Currency       string
+	Tax            float64
+	ApplyInflation bool
+	UpdatedAt      pgtype.Timestamp
 }
 
 func (q *Queries) UpdateCost(ctx context.Context, arg UpdateCostParams) error {
@@ -352,6 +365,7 @@ func (q *Queries) UpdateCost(ctx context.Context, arg UpdateCostParams) error {
 		arg.Amount,
 		arg.Currency,
 		arg.Tax,
+		arg.ApplyInflation,
 		arg.UpdatedAt,
 	)
 	return err

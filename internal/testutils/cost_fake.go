@@ -17,6 +17,7 @@ type CostFakeBuilder struct {
 	Amount              float64
 	Currency            domain.Currency
 	Tax                 float64
+	ApplyInflation      bool
 	CostAllocationProps []domain.CostAllocationProps
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
@@ -24,14 +25,15 @@ type CostFakeBuilder struct {
 
 func NewCostFakeBuilder() *CostFakeBuilder {
 	return &CostFakeBuilder{
-		CostID:      uuid.New().String(),
-		BaselineID:  uuid.New().String(),
-		CostType:    domain.CostType(randomdata.StringSample("one_time", "running", "investment")),
-		Description: randomdata.Paragraph(),
-		Comment:     randomdata.SillyName(),
-		Amount:      100.0,
-		Currency:    domain.Currency(randomdata.StringSample("BRL", "USD", "EUR")),
-		Tax:         randomdata.Decimal(0.00, 45.00),
+		CostID:         uuid.New().String(),
+		BaselineID:     uuid.New().String(),
+		CostType:       domain.CostType(randomdata.StringSample("one_time", "running", "investment")),
+		Description:    randomdata.Paragraph(),
+		Comment:        randomdata.SillyName(),
+		Amount:         100.0,
+		Currency:       domain.Currency(randomdata.StringSample("BRL", "USD", "EUR")),
+		Tax:            randomdata.Decimal(0.00, 45.00),
+		ApplyInflation: randomdata.Boolean(),
 		CostAllocationProps: []domain.CostAllocationProps{
 			{Year: 2020, Month: time.January, Amount: 60.00},
 			{Year: 2020, Month: time.August, Amount: 40.00},
@@ -81,6 +83,11 @@ func (b *CostFakeBuilder) WithTax(tax float64) *CostFakeBuilder {
 	return b
 }
 
+func (b *CostFakeBuilder) WithApplyInflation(applyInflation bool) *CostFakeBuilder {
+	b.ApplyInflation = applyInflation
+	return b
+}
+
 func (b *CostFakeBuilder) WithCostAllocationProps(allocations []domain.CostAllocationProps) *CostFakeBuilder {
 	b.CostAllocationProps = allocations
 	return b
@@ -116,6 +123,7 @@ func (b *CostFakeBuilder) Build() *domain.Cost {
 		Amount:          b.Amount,
 		Currency:        b.Currency,
 		Tax:             b.Tax,
+		ApplyInflation:  b.ApplyInflation,
 		CostAllocations: allocations,
 	}
 
