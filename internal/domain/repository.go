@@ -12,7 +12,6 @@ type EstimationRepository interface {
 	PortfolioRepository
 	BudgetRepository
 	WorkloadRepository
-	Validator
 }
 
 type UserRepository interface {
@@ -59,6 +58,7 @@ type PlanRepository interface {
 	GetPlan(ctx context.Context, planID string) (*Plan, error)
 	UpdatePlan(ctx context.Context, plan *Plan) error
 	DeletePlan(ctx context.Context, planID string) error
+	ValidatePlan(ctx context.Context, planID string) error
 }
 
 type PortfolioRepository interface {
@@ -88,8 +88,4 @@ type WorkloadRepository interface {
 	DeleteWorkload(ctx context.Context, workloadID string) error
 	DeleteWorkloadsByPortfolioID(ctx context.Context, portfolioID string) error
 	GetWorkloadManyByPortfolioID(ctx context.Context, portfolioID string) ([]*Workload, error)
-}
-
-type Validator interface {
-	ValidatePlan(ctx context.Context, planID string) error
 }
