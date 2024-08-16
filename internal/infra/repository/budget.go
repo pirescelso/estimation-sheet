@@ -169,8 +169,6 @@ func (r *estimationRepositoryPostgres) DeleteBudgetsByPortfolioID(ctx context.Co
 	}
 
 	return nil
-	// _, err = r.queries.DeletePortfolio(ctx, portfolioID)
-	// return err
 }
 
 func (r *estimationRepositoryPostgres) GetBudgetManyByPortfolioID(ctx context.Context, portfolioID string) ([]*domain.Budget, error) {
