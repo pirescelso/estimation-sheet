@@ -80,7 +80,17 @@ WHERE
     workload_id = $1
 ORDER BY allocation_date ASC;
 
-;
+-- name: FindWorkloadAllocationsGroupedByYear :many
+SELECT EXTRACT(
+        YEAR
+        FROM workload_allocations.allocation_date
+    )::int AS year, SUM(workload_allocations.hours)::int AS hours
+FROM workload_allocations
+WHERE
+    workload_id = $1
+GROUP BY
+    year
+ORDER BY year ASC;
 
 -- name: DeleteWorkloadAllocations :execrows
 DELETE FROM workload_allocations WHERE workload_id = $1;

@@ -2,13 +2,15 @@ package usecase_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
+	"github.com/celsopires1999/estimation/internal/common"
 	"github.com/celsopires1999/estimation/internal/domain"
 	"github.com/celsopires1999/estimation/internal/infra/db"
 	"github.com/celsopires1999/estimation/internal/infra/repository"
-	"github.com/celsopires1999/estimation/internal/service"
+
 	"github.com/celsopires1999/estimation/internal/testutils"
 	"github.com/celsopires1999/estimation/internal/usecase"
 	"github.com/google/uuid"
@@ -25,10 +27,7 @@ type CreatePortfolioUseCaseTestSuite struct {
 	suite.Suite
 	dbpool     *pgxpool.Pool
 	m          *migrate.Migrate
-	baseline   *domain.Baseline
 	txm        db.TransactionManagerInterface
-	costs      []*domain.Cost
-	service    *service.EstimationService
 	repository domain.EstimationRepository
 }
 
@@ -39,7 +38,6 @@ func (s *CreatePortfolioUseCaseTestSuite) SetupSuite() {
 		return repository.NewEstimationRepositoryTxmPostgres(q)
 	})
 
-	s.service = service.NewEstimationService(s.dbpool)
 	s.repository = repository.NewEstimationRepositoryPostgres(s.dbpool)
 }
 
@@ -63,12 +61,12 @@ func TestIntegrationCreatePortfolioUseCase(t *testing.T) {
 func (s *CreatePortfolioUseCaseTestSuite) TestIntegrationCreatePortfolio() {
 	s.Run("should create portfolio with shift of 8 months", func() {
 		ctx := context.Background()
-		s.createDependenciesBaseline(ctx)
-		s.createDependencies8Months(ctx)
-		planID := s.createDependenciesPlan(ctx)
+		baseline := s.createDependenciesBaseline(ctx)
+		s.createDependencies8Months(ctx, baseline)
+		plan := s.createDependenciesPlan(ctx)
 		input := usecase.CreatePortfolioInputDTO{
-			BaselineID:  s.baseline.BaselineID,
-			PlanID:      planID,
+			BaselineID:  baseline.BaselineID,
+			PlanID:      plan.PlanID,
 			ShiftMonths: 8,
 		}
 
@@ -86,7 +84,7 @@ func (s *CreatePortfolioUseCaseTestSuite) TestIntegrationCreatePortfolio() {
 
 		portfolio, err := s.repository.GetPortfolio(ctx, output.PortfolioID)
 		s.Nil(err)
-		s.Equal(s.baseline.StartDate.AddDate(0, 8, 0), portfolio.StartDate)
+		s.Equal(baseline.StartDate.AddDate(0, 8, 0), portfolio.StartDate)
 
 		budgets, err := s.repository.GetBudgetManyByPortfolioID(ctx, output.PortfolioID)
 		s.Nil(err)
@@ -112,12 +110,12 @@ func (s *CreatePortfolioUseCaseTestSuite) TestIntegrationCreatePortfolio() {
 
 	s.Run("should create portfolio in BRL", func() {
 		ctx := context.Background()
-		s.createDependenciesBaseline(ctx)
-		s.createDependenciesBRL(ctx)
-		planID := s.createDependenciesPlan(ctx)
+		baseline := s.createDependenciesBaseline(ctx)
+		costs := s.createDependenciesBRL(ctx, baseline)
+		plan := s.createDependenciesPlan(ctx)
 		input := usecase.CreatePortfolioInputDTO{
-			BaselineID:  s.baseline.BaselineID,
-			PlanID:      planID,
+			BaselineID:  baseline.BaselineID,
+			PlanID:      plan.PlanID,
 			ShiftMonths: 0,
 		}
 
@@ -131,23 +129,23 @@ func (s *CreatePortfolioUseCaseTestSuite) TestIntegrationCreatePortfolio() {
 
 		portfolio, err := s.repository.GetPortfolio(ctx, output.PortfolioID)
 		s.Nil(err)
-		s.Equal(s.baseline.StartDate.AddDate(0, 0, 0), portfolio.StartDate)
+		s.Equal(baseline.StartDate.AddDate(0, 0, 0), portfolio.StartDate)
 
 		budgets, err := s.repository.GetBudgetManyByPortfolioID(ctx, output.PortfolioID)
 		s.Nil(err)
 		s.Equal(1, len(budgets))
 		s.Equal(970.53, budgets[0].Amount)
 		s.Equal(970.53, budgets[0].BudgetAllocations[0].Amount)
-		s.Equal(s.costs[0].CostAllocations[0].AllocationDate, budgets[0].BudgetAllocations[0].AllocationDate)
+		s.Equal(costs[0].CostAllocations[0].AllocationDate, budgets[0].BudgetAllocations[0].AllocationDate)
 	})
 	s.Run("should create portfolio with running cost", func() {
 		ctx := context.Background()
-		s.createDependenciesBaseline(ctx)
-		s.createDependenciesRC(ctx)
-		planID := s.createDependenciesPlan(ctx)
+		baseline := s.createDependenciesBaseline(ctx)
+		costs := s.createDependenciesRC(ctx, baseline)
+		plan := s.createDependenciesPlan(ctx)
 		input := usecase.CreatePortfolioInputDTO{
-			BaselineID:  s.baseline.BaselineID,
-			PlanID:      planID,
+			BaselineID:  baseline.BaselineID,
+			PlanID:      plan.PlanID,
 			ShiftMonths: 0,
 		}
 
@@ -158,33 +156,88 @@ func (s *CreatePortfolioUseCaseTestSuite) TestIntegrationCreatePortfolio() {
 		s.Nil(err)
 		s.Equal(107_640.00, budgets[0].Amount)
 		s.Equal(107_640.00, budgets[0].BudgetAllocations[0].Amount)
-		s.Equal(s.costs[0].CostAllocations[0].AllocationDate, budgets[0].BudgetAllocations[0].AllocationDate)
+		s.Equal(costs[0].CostAllocations[0].AllocationDate, budgets[0].BudgetAllocations[0].AllocationDate)
 	})
+
+	s.Run("should not create portfolio with existing baseline and plan", func() {
+		ctx := context.Background()
+		baseline := s.createDependenciesBaseline(ctx)
+		s.createDependencies8Months(ctx, baseline)
+		plan := s.createDependenciesPlan(ctx)
+		input := usecase.CreatePortfolioInputDTO{
+			BaselineID:  baseline.BaselineID,
+			PlanID:      plan.PlanID,
+			ShiftMonths: 8,
+		}
+
+		uc := usecase.NewCreatePortfolioUseCase(s.txm)
+		output, err := uc.Execute(ctx, input)
+
+		s.Nil(err)
+		s.NotNil(output)
+
+		if err != nil {
+			s.T().Fatal(err)
+		}
+
+		newBaseline := domain.NewBaseline(
+			baseline.Code,
+			baseline.Review+1,
+			baseline.Title,
+			baseline.Description,
+			baseline.StartDate,
+			baseline.Duration,
+			baseline.ManagerID,
+			baseline.EstimatorID,
+		)
+
+		err = s.repository.CreateBaseline(ctx, newBaseline)
+		if err != nil {
+			s.T().Fatal(err)
+		}
+
+		s.createDependencies8Months(ctx, newBaseline)
+
+		input = usecase.CreatePortfolioInputDTO{
+			BaselineID:  newBaseline.BaselineID,
+			PlanID:      plan.PlanID,
+			ShiftMonths: 8,
+		}
+
+		_, err = uc.Execute(ctx, input)
+
+		expectedError := common.NewConflictError(fmt.Errorf("portfolio for plan id %s and baseline code %s already exists", plan.PlanID, newBaseline.Code))
+
+		s.Equal(expectedError, err)
+	})
+
 }
 
-func (s *CreatePortfolioUseCaseTestSuite) createDependenciesBaseline(ctx context.Context) {
+func (s *CreatePortfolioUseCaseTestSuite) createDependenciesBaseline(ctx context.Context) *domain.Baseline {
 	user := testutils.NewUserFakeBuilder().WithManager().Build()
 	err := s.repository.CreateUser(ctx, user)
 	if err != nil {
 		s.T().Fatal(err)
 	}
-	s.baseline = testutils.NewBaselineFakeBuilder().
+	baseline := testutils.NewBaselineFakeBuilder().
 		WithManagerID(user.UserID).
 		WithEstimatorID(user.UserID).
 		WithStartDate(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)).
 		Build()
 
-	err = s.repository.CreateBaseline(ctx, s.baseline)
+	err = s.repository.CreateBaseline(ctx, baseline)
 	if err != nil {
 		s.T().Fatal(err)
 	}
+
+	return baseline
 }
 
-func (s *CreatePortfolioUseCaseTestSuite) createDependencies8Months(ctx context.Context) {
-	s.costs = make([]*domain.Cost, 0)
+func (s *CreatePortfolioUseCaseTestSuite) createDependencies8Months(ctx context.Context, baseline *domain.Baseline) []*domain.Cost {
+	costs := make([]*domain.Cost, 0)
 
-	s.costs = append(s.costs, testutils.NewCostFakeBuilder().
-		WithBaselineID(s.baseline.BaselineID).
+	costs = append(costs, testutils.NewCostFakeBuilder().
+		WithBaselineID(baseline.BaselineID).
 		WithAmount(880.30).
 		WithCurrency("BRL").
 		WithApplyInflation(true).
@@ -195,8 +248,8 @@ func (s *CreatePortfolioUseCaseTestSuite) createDependencies8Months(ctx context.
 		WithTax(0.00).
 		Build())
 
-	s.costs = append(s.costs, testutils.NewCostFakeBuilder().
-		WithBaselineID(s.baseline.BaselineID).
+	costs = append(costs, testutils.NewCostFakeBuilder().
+		WithBaselineID(baseline.BaselineID).
 		WithAmount(220.20).
 		WithCurrency("EUR").
 		WithApplyInflation(false).
@@ -207,17 +260,19 @@ func (s *CreatePortfolioUseCaseTestSuite) createDependencies8Months(ctx context.
 		WithTax(23.00).
 		Build())
 
-	err := s.repository.CreateCostMany(ctx, s.costs)
+	err := s.repository.CreateCostMany(ctx, costs)
 	if err != nil {
 		s.T().Fatal(err)
 	}
+
+	return costs
 }
 
-func (s *CreatePortfolioUseCaseTestSuite) createDependenciesBRL(ctx context.Context) {
-	s.costs = make([]*domain.Cost, 0)
+func (s *CreatePortfolioUseCaseTestSuite) createDependenciesBRL(ctx context.Context, baseline *domain.Baseline) []*domain.Cost {
+	costs := make([]*domain.Cost, 0)
 
-	s.costs = append(s.costs, testutils.NewCostFakeBuilder().
-		WithBaselineID(s.baseline.BaselineID).
+	costs = append(costs, testutils.NewCostFakeBuilder().
+		WithBaselineID(baseline.BaselineID).
 		WithAmount(880.30).
 		WithCurrency("BRL").
 		WithTax(10.25).
@@ -227,27 +282,29 @@ func (s *CreatePortfolioUseCaseTestSuite) createDependenciesBRL(ctx context.Cont
 		}).
 		Build())
 
-	err := s.repository.CreateCostMany(ctx, s.costs)
+	err := s.repository.CreateCostMany(ctx, costs)
 	if err != nil {
 		s.T().Fatal(err)
 	}
+
+	return costs
 }
 
-func (s *CreatePortfolioUseCaseTestSuite) createDependenciesPlan(ctx context.Context) (planID string) {
+func (s *CreatePortfolioUseCaseTestSuite) createDependenciesPlan(ctx context.Context) *domain.Plan {
 	plan := testutils.NewPlanFakeBuilder().Build()
 	err := s.repository.CreatePlan(ctx, plan)
 	if err != nil {
 		s.T().Fatal(err)
 	}
 
-	return plan.PlanID
+	return plan
 }
 
-func (s *CreatePortfolioUseCaseTestSuite) createDependenciesRC(ctx context.Context) {
-	s.costs = make([]*domain.Cost, 0)
+func (s *CreatePortfolioUseCaseTestSuite) createDependenciesRC(ctx context.Context, baseline *domain.Baseline) []*domain.Cost {
+	costs := make([]*domain.Cost, 0)
 
-	s.costs = append(s.costs, testutils.NewCostFakeBuilder().
-		WithBaselineID(s.baseline.BaselineID).
+	costs = append(costs, testutils.NewCostFakeBuilder().
+		WithBaselineID(baseline.BaselineID).
 		WithCostType(domain.RunningCost).
 		WithAmount(100_000.00).
 		WithCurrency("BRL").
@@ -258,8 +315,10 @@ func (s *CreatePortfolioUseCaseTestSuite) createDependenciesRC(ctx context.Conte
 		}).
 		Build())
 
-	err := s.repository.CreateCostMany(ctx, s.costs)
+	err := s.repository.CreateCostMany(ctx, costs)
 	if err != nil {
 		s.T().Fatal(err)
 	}
+
+	return costs
 }

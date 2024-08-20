@@ -31,6 +31,15 @@ SELECT count(*) FROM portfolios WHERE baseline_id = $1;
 -- name: FindPortfolioById :one
 SELECT * FROM portfolios WHERE portfolio_id = $1;
 
+-- name: FindPortfolioByPlanIdAndBaselineCode :one
+SELECT portfolios.*
+FROM portfolios
+    INNER JOIN baselines ON baselines.baseline_id = portfolios.baseline_id
+WHERE
+    portfolios.plan_id = $1
+    AND baselines.code = $2
+LIMIT 1;
+
 -- name: FindPortfolioByIdWithRelations :one
 SELECT
     pf.portfolio_id AS portfolio_id,

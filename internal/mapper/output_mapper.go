@@ -410,12 +410,11 @@ type BudgetOutput struct {
 	UpdatedAt          time.Time                `json:"updated_at"`
 }
 
-func BudgetOutputFromDb(budget db.BudgetRow, allocations []db.BudgetAllocation) BudgetOutput {
+func BudgetOutputFromDb(budget db.BudgetRow, allocations []db.FindBudgetAllocationsGroupedByYearRow) BudgetOutput {
 	allocs := make([]budgetAllocationOutput, len(allocations))
 	for i, alloc := range allocations {
 		allocs[i] = budgetAllocationOutput{
-			Year:   alloc.AllocationDate.Time.Year(),
-			Month:  int(alloc.AllocationDate.Time.Month()),
+			Year:   int(alloc.Year),
 			Amount: alloc.Amount,
 		}
 	}
@@ -439,7 +438,6 @@ func BudgetOutputFromDb(budget db.BudgetRow, allocations []db.BudgetAllocation) 
 
 type budgetAllocationOutput struct {
 	Year   int     `json:"year"`
-	Month  int     `json:"month"`
 	Amount float64 `json:"amount"`
 }
 
@@ -472,12 +470,11 @@ type WorkloadOutput struct {
 	UpdatedAt           time.Time                  `json:"updated_at"`
 }
 
-func WorkloadOutputFromDb(workload db.WorkloadRow, allocations []db.WorkloadAllocation) WorkloadOutput {
+func WorkloadOutputFromDb(workload db.WorkloadRow, allocations []db.FindWorkloadAllocationsGroupedByYearRow) WorkloadOutput {
 	allocs := make([]workloadAllocationOutput, len(allocations))
 	for i, alloc := range allocations {
 		allocs[i] = workloadAllocationOutput{
-			Year:  alloc.AllocationDate.Time.Year(),
-			Month: int(alloc.AllocationDate.Time.Month()),
+			Year:  int(alloc.Year),
 			Hours: int(alloc.Hours),
 		}
 	}
@@ -497,7 +494,6 @@ func WorkloadOutputFromDb(workload db.WorkloadRow, allocations []db.WorkloadAllo
 
 type workloadAllocationOutput struct {
 	Year  int `json:"year"`
-	Month int `json:"month"`
 	Hours int `json:"hours"`
 }
 

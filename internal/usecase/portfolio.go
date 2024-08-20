@@ -40,10 +40,6 @@ func (uc *CreatePortfolioUseCase) Execute(ctx context.Context, input CreatePortf
 			return err
 		}
 
-		if err := uc.validate(ctx, repository, input); err != nil {
-			return err
-		}
-
 		baseline, err := repository.GetBaseline(ctx, input.BaselineID)
 		if err != nil {
 			var notFoundErr *common.NotFoundError
@@ -59,6 +55,11 @@ func (uc *CreatePortfolioUseCase) Execute(ctx context.Context, input CreatePortf
 			if errors.As(err, &notFoundErr) {
 				return common.NewConflictError(fmt.Errorf("plan id %s does not exist", input.PlanID))
 			}
+			return err
+		}
+
+		err = repository.ValidatePortfolioUniqueBaselineByPlan(ctx, input.PlanID, baseline.Code)
+		if err != nil {
 			return err
 		}
 
@@ -106,18 +107,6 @@ func (uc *CreatePortfolioUseCase) Execute(ctx context.Context, input CreatePortf
 	}
 
 	return &output, nil
-}
-
-func (uc *CreatePortfolioUseCase) validate(ctx context.Context, repository domain.EstimationRepository, input CreatePortfolioInputDTO) error {
-	if err := repository.ValidatePlan(ctx, input.PlanID); err != nil {
-		var notFoundErr *common.NotFoundError
-		if errors.As(err, &notFoundErr) {
-			return common.NewConflictError(fmt.Errorf("plan id %s does not exist", input.PlanID))
-		}
-		return err
-	}
-
-	return nil
 }
 
 // DeletePortfolioUseCase is responsible for deleting a portfolio in the system
