@@ -119,7 +119,6 @@ POST http://localhost:9000/api/v1/baselines/{{ baselineId }}/costs
 Content-Type: application/json
 
 {
-    "baseline_id": "123",
     "cost_type": "one_time",
     "description": "Mão de obra do PO",
     "comment": "estimativa do PO",

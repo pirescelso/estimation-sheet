@@ -156,6 +156,44 @@ func (q *Queries) FindWorkloadAllocations(ctx context.Context, workloadID string
 	return items, nil
 }
 
+const findWorkloadAllocationsGroupedByYear = `-- name: FindWorkloadAllocationsGroupedByYear :many
+SELECT EXTRACT(
+        YEAR
+        FROM workload_allocations.allocation_date
+    )::int AS year, SUM(workload_allocations.hours)::int AS hours
+FROM workload_allocations
+WHERE
+    workload_id = $1
+GROUP BY
+    year
+ORDER BY year ASC
+`
+
+type FindWorkloadAllocationsGroupedByYearRow struct {
+	Year  int32
+	Hours int32
+}
+
+func (q *Queries) FindWorkloadAllocationsGroupedByYear(ctx context.Context, workloadID string) ([]FindWorkloadAllocationsGroupedByYearRow, error) {
+	rows, err := q.db.Query(ctx, findWorkloadAllocationsGroupedByYear, workloadID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FindWorkloadAllocationsGroupedByYearRow
+	for rows.Next() {
+		var i FindWorkloadAllocationsGroupedByYearRow
+		if err := rows.Scan(&i.Year, &i.Hours); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const findWorkloadById = `-- name: FindWorkloadById :one
 SELECT workload_id, portfolio_id, effort_id, hours, created_at, updated_at FROM workloads WHERE workload_id = $1
 `

@@ -30,7 +30,7 @@ func (s *EstimationService) GetPortfolio(ctx context.Context, input GetPortfolio
 	budgetsOutput := make([]mapper.BudgetOutput, len(budgets))
 
 	for i, budget := range budgets {
-		allocations, err := s.queries.FindBudgetAllocations(ctx, budget.BudgetID)
+		allocations, err := s.queries.FindBudgetAllocationsGroupedByYear(ctx, budget.BudgetID)
 		if err != nil {
 			return nil, err
 		}
@@ -47,7 +47,7 @@ func (s *EstimationService) GetPortfolio(ctx context.Context, input GetPortfolio
 	workloadsOutput := make([]mapper.WorkloadOutput, len(workloads))
 
 	for i, workload := range workloads {
-		allocations, err := s.queries.FindWorkloadAllocations(ctx, workload.WorkloadID)
+		allocations, err := s.queries.FindWorkloadAllocationsGroupedByYear(ctx, workload.WorkloadID)
 		if err != nil {
 			return nil, err
 		}

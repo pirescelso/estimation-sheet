@@ -27,8 +27,10 @@ type E2EScenarioSuite struct {
 	manager         userOutput
 	estimator       userOutput
 	baseline        baselineOutput
+	competence      competenceOutput
 	costPO          costOutput
 	costConsulting  costOutput
+	effort          effortOutput
 	planBP          planOutput
 	planFC03        planOutput
 	portfolioIDBP   portfolioIDOutput
@@ -53,9 +55,11 @@ func TestE2EScenario(t *testing.T) {
 func (s *E2EScenarioSuite) TestE2ECreate() {
 	s.postUsersManager()
 	s.postUsersEstimator()
+	s.postCompetence()
 	s.postBaselines()
 	s.postCostsPO()
 	s.postCostsConsulting()
+	s.postEffort()
 	s.postPlanBP()
 	s.postPlanFC03()
 	s.postPortfolioBP()
@@ -149,6 +153,47 @@ func (s *E2EScenarioSuite) postUsersEstimator() {
 
 	s.mu.Lock()
 	s.estimator = output
+	s.mu.Unlock()
+}
+
+func (s *E2EScenarioSuite) postCompetence() {
+	c := http.Client{}
+
+	input := competenceInput{
+		Code: "Tech Doc",
+		Name: "Technical Documentation",
+	}
+
+	message, err := json.Marshal(input)
+	s.Nil(err)
+
+	payload := bytes.NewReader(message)
+
+	r, err := c.Post("http://localhost:9000/api/v1/competences", "application/json", payload)
+	s.Nil(err)
+	defer r.Body.Close()
+	body, err := io.ReadAll(r.Body)
+	s.Nil(err)
+
+	s.Equal(http.StatusCreated, r.StatusCode)
+
+	var output competenceOutput
+	err = json.Unmarshal(body, &output)
+	s.Nil(err)
+
+	_, err = uuid.Parse(output.CompetenceID)
+	s.Nil(err, "CompetenceID should be a valid uuidv4")
+	s.Equal(input.Code, output.Code)
+	s.Equal(input.Name, output.Name)
+
+	parsedTime, err := time.Parse(time.RFC3339, output.CreatedAt.Format(time.RFC3339))
+	s.Nil(err)
+	s.True(parsedTime.After(time.Date(1900, time.January, 1, 0, 0, 0, 0, time.UTC)))
+	s.True(parsedTime.Before(time.Now()))
+	s.True(output.UpdatedAt.IsZero())
+
+	s.mu.Lock()
+	s.competence = output
 	s.mu.Unlock()
 }
 
@@ -342,6 +387,92 @@ func (s *E2EScenarioSuite) postCostsConsulting() {
 
 	s.mu.Lock()
 	s.costConsulting = output
+	s.mu.Unlock()
+}
+
+func (s *E2EScenarioSuite) postEffort() {
+	c := http.Client{}
+
+	input := effortInput{
+		CompetenceID: s.competence.CompetenceID,
+		BaselineID:   s.baseline.BaselineID,
+		Comment:      "considerado a Simone na atividade",
+		Hours:        160,
+		EffortAllocations: []effortAllocationInput{
+			{
+				Year:  2024,
+				Month: 1,
+				Hours: 20,
+			},
+			{
+				Year:  2024,
+				Month: 2,
+				Hours: 20,
+			},
+			{
+				Year:  2024,
+				Month: 3,
+				Hours: 20,
+			},
+			{
+				Year:  2024,
+				Month: 4,
+				Hours: 20,
+			},
+			{
+				Year:  2024,
+				Month: 5,
+				Hours: 20,
+			},
+			{
+				Year:  2024,
+				Month: 6,
+				Hours: 20,
+			},
+			{
+				Year:  2024,
+				Month: 7,
+				Hours: 20,
+			},
+			{
+				Year:  2024,
+				Month: 8,
+				Hours: 20,
+			},
+		},
+	}
+
+	message, err := json.Marshal(input)
+	s.Nil(err)
+
+	payload := bytes.NewReader(message)
+
+	r, err := c.Post("http://localhost:9000/api/v1/baselines/"+s.baseline.BaselineID+"/efforts", "application/json", payload)
+	s.Nil(err)
+	defer r.Body.Close()
+	body, err := io.ReadAll(r.Body)
+	s.Nil(err)
+
+	s.Equal(http.StatusCreated, r.StatusCode)
+
+	var output effortOutput
+	err = json.Unmarshal(body, &output)
+	s.Nil(err)
+
+	_, err = uuid.Parse(output.EffortID)
+	s.Nil(err, "UserID should be a valid uuidv4")
+	s.Equal(input.BaselineID, output.BaselineID)
+	s.Equal(input.CompetenceID, output.CompetenceID)
+	s.Equal(input.Comment, output.Comment)
+	s.Equal(input.Hours, output.Hours)
+	for i, a := range output.EffortAllocations {
+		s.Equal(input.EffortAllocations[i].Year, a.Year)
+		s.Equal(input.EffortAllocations[i].Month, a.Month)
+		s.Equal(input.EffortAllocations[i].Hours, a.Hours)
+	}
+
+	s.mu.Lock()
+	s.effort = output
 	s.mu.Unlock()
 }
 
@@ -594,10 +725,12 @@ func (s *E2EScenarioSuite) getPortfolioBP() {
 	if !cmp.Equal(expected, output,
 		cmpopts.IgnoreFields(portfolioOutput{}, "PortfolioID", "CreatedAt", "UpdatedAt"),
 		cmpopts.IgnoreFields(budgetOutput{}, "BudgetID", "PortfolioID", "CreatedAt", "UpdatedAt"),
+		cmpopts.IgnoreFields(workloadOutput{}, "WorkloadID", "PortfolioID", "CreatedAt", "UpdatedAt"),
 	) {
 		s.T().Logf("%s", cmp.Diff(expected, output,
 			cmpopts.IgnoreFields(portfolioOutput{}, "PortfolioID", "CreatedAt", "UpdatedAt"),
 			cmpopts.IgnoreFields(budgetOutput{}, "BudgetID", "PortfolioID", "CreatedAt", "UpdatedAt"),
+			cmpopts.IgnoreFields(workloadOutput{}, "WorkloadID", "PortfolioID", "CreatedAt", "UpdatedAt"),
 		))
 		s.Fail("Portfolio is not equal to expected")
 	}
@@ -648,10 +781,13 @@ func (s *E2EScenarioSuite) getPortfolioFC03() {
 	if !cmp.Equal(expected, output,
 		cmpopts.IgnoreFields(portfolioOutput{}, "PortfolioID", "CreatedAt", "UpdatedAt"),
 		cmpopts.IgnoreFields(budgetOutput{}, "BudgetID", "PortfolioID", "CreatedAt", "UpdatedAt"),
+		cmpopts.IgnoreFields(workloadOutput{}, "WorkloadID", "PortfolioID", "CreatedAt", "UpdatedAt"),
 	) {
 		s.T().Logf("%s", cmp.Diff(expected, output,
 			cmpopts.IgnoreFields(portfolioOutput{}, "PortfolioID", "CreatedAt", "UpdatedAt"),
 			cmpopts.IgnoreFields(budgetOutput{}, "BudgetID", "PortfolioID", "CreatedAt", "UpdatedAt"),
+			cmpopts.IgnoreFields(workloadOutput{}, "WorkloadID", "PortfolioID", "CreatedAt", "UpdatedAt"),
 		))
+		s.Fail("Portfolio is not equal to expected")
 	}
 }

@@ -1,5 +1,5 @@
 {
-    "portfolio_id": "7282827d-ae78-4aae-90ff-13119f7cc243",
+    "portfolio_id": "8f38440d-4088-474b-8be5-3f9691b4486a",
     "code": "RIT123456789",
     "review": 1,
     "plan_code": "FC 03 2025",
@@ -10,77 +10,69 @@
     "estimator": "Marie Doe",
     "budgets": [
         {
-            "budget_id": "716f3df8-1664-4c99-bafa-09f3665ebbc5",
-            "portfolio_id": "7282827d-ae78-4aae-90ff-13119f7cc243",
+            "budget_id": "77c08370-2380-43c9-98fe-5ba83962b7c1",
+            "portfolio_id": "8f38440d-4088-474b-8be5-3f9691b4486a",
             "cost_type": "one_time",
             "description": "External Consulting",
             "comment": "estimativa de consultoria externa",
             "cost_amount": 80000,
             "cost_currency": "EUR",
             "cost_tax": 23.1,
+            "cost_apply_inflation": false,
             "amount": 689360,
             "budget_allocations": [
                 {
                     "year": 2025,
-                    "month": 10,
-                    "amount": 258510
-                },
-                {
-                    "year": 2025,
-                    "month": 12,
-                    "amount": 430850
+                    "amount": 689360
                 }
             ],
-            "created_at": "2024-08-08T02:52:23Z",
+            "created_at": "2024-08-20T20:41:36Z",
             "updated_at": null
         },
         {
-            "budget_id": "edb22942-26d5-456c-91b1-fea418631a8e",
-            "portfolio_id": "7282827d-ae78-4aae-90ff-13119f7cc243",
+            "budget_id": "e6d6057e-1af5-4dc2-bd77-818c1fa04967",
+            "portfolio_id": "8f38440d-4088-474b-8be5-3f9691b4486a",
             "cost_type": "one_time",
             "description": "Mão de obra do PO",
             "comment": "estimativa do PO",
             "cost_amount": 180000,
             "cost_currency": "BRL",
             "cost_tax": 0,
+            "cost_apply_inflation": true,
             "amount": 191160,
             "budget_allocations": [
                 {
                     "year": 2025,
-                    "month": 7,
-                    "amount": 31860
-                },
-                {
-                    "year": 2025,
-                    "month": 8,
-                    "amount": 31860
-                },
-                {
-                    "year": 2025,
-                    "month": 9,
-                    "amount": 31860
-                },
-                {
-                    "year": 2025,
-                    "month": 10,
-                    "amount": 31860
-                },
-                {
-                    "year": 2025,
-                    "month": 11,
-                    "amount": 31860
-                },
-                {
-                    "year": 2025,
-                    "month": 12,
-                    "amount": 31860
+                    "amount": 191160
                 }
             ],
-            "created_at": "2024-08-08T02:52:23Z",
+            "created_at": "2024-08-20T20:41:36Z",
+            "updated_at": null
+        }
+    ],
+    "workloads": [
+        {
+            "workload_id": "46dcfa5b-e631-4ee4-a668-b1b0a76c013a",
+            "portfolio_id": "8f38440d-4088-474b-8be5-3f9691b4486a",
+            "competence_code": "Tech Doc",
+            "competence_name": "Technical Documentation",
+            "comment": "considerado a Simone na atividade",
+            "hours": 160,
+            "workload_allocations": [
+                {
+                    "year": 2025,
+                    "hours": 120
+                },
+                {
+                    "year": 2026,
+                    "hours": 40
+                }
+            ],
+            "created_at": "2024-08-20T20:41:36Z",
             "updated_at": null
         }
     ],
     "start_date": "2025-07-01",
-    "created_at": "2024-08-08T02:52:23Z",
+    "created_at": "2024-08-20T20:41:36Z",
     "updated_at": null
 }

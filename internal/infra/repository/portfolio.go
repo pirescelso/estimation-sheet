@@ -63,6 +63,24 @@ func (r *estimationRepositoryPostgres) GetPortfolio(ctx context.Context, portfol
 	return portfolio, nil
 }
 
+func (r *estimationRepositoryPostgres) ValidatePortfolioUniqueBaselineByPlan(ctx context.Context, planID string, baselineCode string) error {
+	_, err := r.queries.FindPortfolioByPlanIdAndBaselineCode(ctx,
+		db.FindPortfolioByPlanIdAndBaselineCodeParams{
+			PlanID: planID,
+			Code:   baselineCode,
+		},
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil
+		}
+		return err
+	}
+
+	return common.NewConflictError(fmt.Errorf("portfolio for plan id %s and baseline code %s already exists", planID, baselineCode))
+}
+
 func (r *estimationRepositoryPostgres) UpdatePortfolio(ctx context.Context, portfolio *domain.Portfolio) error {
 	err := r.queries.UpdatePortfolio(ctx, db.UpdatePortfolioParams{
 		PortfolioID: portfolio.PortfolioID,

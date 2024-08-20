@@ -68,6 +68,7 @@ type PortfolioRepository interface {
 	DeletePortfolio(ctx context.Context, portfolioID string) error
 	CountPortfoliosByPlanId(ctx context.Context, planID string) (int64, error)
 	CountPortfoliosByBaselineId(ctx context.Context, baselineID string) (int64, error)
+	ValidatePortfolioUniqueBaselineByPlan(ctx context.Context, planID, baselineCode string) error
 }
 
 type BudgetRepository interface {

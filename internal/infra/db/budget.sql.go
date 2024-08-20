@@ -156,6 +156,44 @@ func (q *Queries) FindBudgetAllocations(ctx context.Context, budgetID string) ([
 	return items, nil
 }
 
+const findBudgetAllocationsGroupedByYear = `-- name: FindBudgetAllocationsGroupedByYear :many
+SELECT EXTRACT(
+        YEAR
+        FROM budget_allocations.allocation_date
+    )::int AS year, SUM(budget_allocations.amount)::float8 AS amount
+FROM budget_allocations
+WHERE
+    budget_id = $1
+GROUP BY
+    year
+ORDER BY year ASC
+`
+
+type FindBudgetAllocationsGroupedByYearRow struct {
+	Year   int32
+	Amount float64
+}
+
+func (q *Queries) FindBudgetAllocationsGroupedByYear(ctx context.Context, budgetID string) ([]FindBudgetAllocationsGroupedByYearRow, error) {
+	rows, err := q.db.Query(ctx, findBudgetAllocationsGroupedByYear, budgetID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FindBudgetAllocationsGroupedByYearRow
+	for rows.Next() {
+		var i FindBudgetAllocationsGroupedByYearRow
+		if err := rows.Scan(&i.Year, &i.Amount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const findBudgetById = `-- name: FindBudgetById :one
 SELECT budget_id, portfolio_id, cost_id, amount, created_at, updated_at FROM budgets WHERE budget_id = $1
 `

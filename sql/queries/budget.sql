@@ -80,7 +80,17 @@ WHERE
     budget_id = $1
 ORDER BY allocation_date ASC;
 
-;
+-- name: FindBudgetAllocationsGroupedByYear :many
+SELECT EXTRACT(
+        YEAR
+        FROM budget_allocations.allocation_date
+    )::int AS year, SUM(budget_allocations.amount)::float8 AS amount
+FROM budget_allocations
+WHERE
+    budget_id = $1
+GROUP BY
+    year
+ORDER BY year ASC;
 
 -- name: DeleteBudgetAllocations :execrows
 DELETE FROM budget_allocations WHERE budget_id = $1;

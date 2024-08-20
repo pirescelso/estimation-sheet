@@ -22,6 +22,20 @@ type userOutput struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
+
+type competenceInput struct {
+	Code string `json:"code" validate:"required,max=20"`
+	Name string `json:"name" validate:"required,max=50"`
+}
+
+type competenceOutput struct {
+	CompetenceID string    `json:"competence_id"`
+	Code         string    `json:"code"`
+	Name         string    `json:"name"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
 type baselineInput struct {
 	Code        string `json:"code"`
 	Review      int    `json:"review"`
@@ -66,6 +80,37 @@ type costAllocationInput struct {
 	Year   int     `json:"year"`
 	Month  int     `json:"month"`
 	Amount float64 `json:"amount"`
+}
+
+type effortInput struct {
+	BaselineID        string                  `json:"baseline_id" validate:"required,uuid4"`
+	CompetenceID      string                  `json:"competence_id" validate:"required,uuid4"`
+	Comment           string                  `json:"comment"`
+	Hours             int                     `json:"hours" validate:"required,gte=1,lte=160_000"`
+	EffortAllocations []effortAllocationInput `json:"effort_allocations" validate:"required,dive"`
+}
+
+type effortAllocationInput struct {
+	Year  int `json:"year" validate:"required"`
+	Month int `json:"month" validate:"gte=1,lte=12"`
+	Hours int `json:"hours" validate:"required,gte=1,lte=8_000"`
+}
+
+type effortOutput struct {
+	EffortID          string                   `json:"effort_id"`
+	BaselineID        string                   `json:"baseline_id"`
+	CompetenceID      string                   `json:"competence_id"`
+	Comment           string                   `json:"comment"`
+	Hours             int                      `json:"hours"`
+	EffortAllocations []effortAllocationOutput `json:"effort_allocations"`
+	CreatedAt         time.Time                `json:"created_at"`
+	UpdatedAt         time.Time                `json:"updated_at"`
+}
+
+type effortAllocationOutput struct {
+	Year  int `json:"year"`
+	Month int `json:"month"`
+	Hours int `json:"hours"`
 }
 
 type costOutput struct {
@@ -115,19 +160,20 @@ type portfolioIDOutput struct {
 }
 
 type portfolioOutput struct {
-	PortfolioID string         `json:"portfolio_id"`
-	Code        string         `json:"code"`
-	Review      int32          `json:"review"`
-	PlanCode    string         `json:"plan_code"`
-	Title       string         `json:"title"`
-	Description string         `json:"description"`
-	StartDate   string         `json:"start_date" layout:"2006-01-02"`
-	Duration    int32          `json:"duration"`
-	Manager     string         `json:"manager"`
-	Estimator   string         `json:"estimator"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
-	Budgets     []budgetOutput `json:"budgets,omitempty"`
+	PortfolioID string           `json:"portfolio_id"`
+	Code        string           `json:"code"`
+	Review      int32            `json:"review"`
+	PlanCode    string           `json:"plan_code"`
+	Title       string           `json:"title"`
+	Description string           `json:"description"`
+	StartDate   string           `json:"start_date" layout:"2006-01-02"`
+	Duration    int32            `json:"duration"`
+	Manager     string           `json:"manager"`
+	Estimator   string           `json:"estimator"`
+	CreatedAt   time.Time        `json:"created_at"`
+	UpdatedAt   time.Time        `json:"updated_at"`
+	Budgets     []budgetOutput   `json:"budgets,omitempty"`
+	Workloads   []workloadOutput `json:"workloads,omitempty"`
 }
 
 type budgetOutput struct {
@@ -139,6 +185,7 @@ type budgetOutput struct {
 	CostAmount        float64                  `json:"cost_amount"`
 	CostCurrency      string                   `json:"cost_currency"`
 	CostTax           float64                  `json:"cost_tax"`
+	ApplyInflation    bool                     `json:"apply_inflation"`
 	Amount            float64                  `json:"amount"`
 	BudgetAllocations []budgetAllocationOutput `json:"budget_allocations"`
 	CreatedAt         time.Time                `json:"created_at"`
@@ -147,6 +194,22 @@ type budgetOutput struct {
 
 type budgetAllocationOutput struct {
 	Year   int     `json:"year"`
-	Month  int     `json:"month"`
 	Amount float64 `json:"amount"`
+}
+
+type workloadOutput struct {
+	WorkloadID          string                     `json:"workload_id"`
+	PortfolioID         string                     `json:"portfolio_id"`
+	CompetenceCode      string                     `json:"competence_code"`
+	CompetenceName      string                     `json:"competence_name"`
+	Comment             string                     `json:"comment"`
+	Hours               int                        `json:"hours"`
+	WorkloadAllocations []workloadAllocationOutput `json:"workload_allocations"`
+	CreatedAt           time.Time                  `json:"created_at"`
+	UpdatedAt           time.Time                  `json:"updated_at"`
+}
+
+type workloadAllocationOutput struct {
+	Year  int `json:"year"`
+	Hours int `json:"hours"`
 }

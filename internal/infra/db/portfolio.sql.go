@@ -272,6 +272,35 @@ func (q *Queries) FindPortfolioByIdWithRelations(ctx context.Context, portfolioI
 	return i, err
 }
 
+const findPortfolioByPlanIdAndBaselineCode = `-- name: FindPortfolioByPlanIdAndBaselineCode :one
+SELECT portfolios.portfolio_id, portfolios.baseline_id, portfolios.plan_id, portfolios.start_date, portfolios.created_at, portfolios.updated_at
+FROM portfolios
+    INNER JOIN baselines ON baselines.baseline_id = portfolios.baseline_id
+WHERE
+    portfolios.plan_id = $1
+    AND baselines.code = $2
+LIMIT 1
+`
+
+type FindPortfolioByPlanIdAndBaselineCodeParams struct {
+	PlanID string
+	Code   string
+}
+
+func (q *Queries) FindPortfolioByPlanIdAndBaselineCode(ctx context.Context, arg FindPortfolioByPlanIdAndBaselineCodeParams) (Portfolio, error) {
+	row := q.db.QueryRow(ctx, findPortfolioByPlanIdAndBaselineCode, arg.PlanID, arg.Code)
+	var i Portfolio
+	err := row.Scan(
+		&i.PortfolioID,
+		&i.BaselineID,
+		&i.PlanID,
+		&i.StartDate,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const insertPortfolio = `-- name: InsertPortfolio :exec
 INSERT INTO
     portfolios (
