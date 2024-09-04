@@ -16,6 +16,11 @@ import (
 	httpHandler "github.com/celsopires1999/estimation/internal/infra/http"
 )
 
+var (
+	buildTime  string
+	commitHash string
+)
+
 func main() {
 	ctx := context.Background()
 
@@ -58,6 +63,8 @@ func main() {
 	}()
 
 	log.Println("HTTP server running on port", configs.Port)
+	log.Println("Build time", buildTime)
+	log.Println("Commit", commitHash)
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatalf("Error starting HTTP server: %v\n", err)
 	}

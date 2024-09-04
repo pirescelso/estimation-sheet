@@ -23,4 +23,10 @@ test-clean:
 run:
 	go run ./cmd/estimation/main.go
 
-.PHONY:  migrateup migratedown test-unit test-integration test-clean run
+GO_LDFLAGS := -X main.buildTime=$(shell date -u +%Y-%m-%dT%H:%M:%SZ) -X main.commitHash=$(shell git rev-parse HEAD)
+
+build:
+	go build -ldflags "$(GO_LDFLAGS)" -o bin/estimation-sheet cmd/estimation/main.go
+
+
+.PHONY:  migrateup migratedown test-unit test-integration test-e2e test-clean run build
