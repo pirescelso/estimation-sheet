@@ -30,6 +30,11 @@ func NewUserFakeBuilder() *UserFakeBuilder {
 	}
 }
 
+func (b *UserFakeBuilder) WithName(name string) *UserFakeBuilder {
+	b.Name = name
+	return b
+}
+
 func (b *UserFakeBuilder) WithManager() *UserFakeBuilder {
 	b.UserType = "manager"
 	return b

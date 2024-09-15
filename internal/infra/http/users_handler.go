@@ -112,6 +112,20 @@ func (h *usersHandler) deleteUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *usersHandler) listUsers(w http.ResponseWriter, r *http.Request) {
 	input := service.ListUsersInputDTO{}
+	qs := r.URL.Query()
+
+	input.Name = common.ReadString(qs, "name", "")
+
+	input.Filters.Page = common.ReadInt(qs, "page", 1)
+	input.Filters.PageSize = common.ReadInt(qs, "page_size", 20)
+	input.Filters.Sort = common.ReadString(qs, "sort", "-created_at")
+	input.Filters.SortSafelist = []string{"name", "created_at", "-name", "-created_at"}
+
+	if !common.PermittedValue(input.Filters.Sort, input.Filters.SortSafelist...) {
+		writeBadRequest(w, "invalid sort value")
+		return
+	}
+
 	output, err := h.service.ListUsers(r.Context(), input)
 	if err != nil {
 		writeDomainError(w, err)

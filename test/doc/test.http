@@ -24,6 +24,7 @@ Content-Type: application/json
 
 ###
 # @name listUsers
+# GET http://localhost:9000/api/v1/users?name=%doe%&sort=-name&page=1&page_size=2
 GET http://localhost:9000/api/v1/users
 
 ### 
