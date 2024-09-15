@@ -8,8 +8,7 @@ import (
 )
 
 func (s *EstimationService) ListUsers(ctx context.Context, input ListUsersInputDTO) (*ListUsersOutputDTO, error) {
-	// users, err := s.queries.FindAllUsers(ctx)
-	users, _, err := s.queries.SearchUsers(ctx, input.Name, input.Filters)
+	users, metadata, err := s.queries.SearchUsers(ctx, input.Name, input.Filters)
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +18,7 @@ func (s *EstimationService) ListUsers(ctx context.Context, input ListUsersInputD
 		usersOutput[i] = mapper.UserOutputFromDb(user)
 	}
 
-	return &ListUsersOutputDTO{usersOutput}, nil
+	return &ListUsersOutputDTO{metadata, usersOutput}, nil
 }
 
 type ListUsersInputDTO struct {
@@ -28,5 +27,6 @@ type ListUsersInputDTO struct {
 }
 
 type ListUsersOutputDTO struct {
-	Users []mapper.UserOutput `json:"users"`
+	Metadata db.Metadata         `json:"metadata"`
+	Users    []mapper.UserOutput `json:"users"`
 }
