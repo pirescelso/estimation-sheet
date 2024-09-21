@@ -23,7 +23,13 @@
             "budget_allocations": [
                 {
                     "year": 2025,
-                    "amount": 689360
+                    "month": 10,
+                    "amount": 258510
+                },
+                {
+                    "year": 2025,
+                    "month": 12,
+                    "amount": 430850
                 }
             ],
             "created_at": "2024-08-20T20:41:36Z",
@@ -43,7 +49,33 @@
             "budget_allocations": [
                 {
                     "year": 2025,
-                    "amount": 191160
+                    "month": 7,
+                    "amount": 31860
+                },
+                {
+                    "year": 2025,
+                    "month": 8,
+                    "amount": 31860
+                },
+                {
+                    "year": 2025,
+                    "month": 9,
+                    "amount": 31860
+                },
+                {
+                    "year": 2025,
+                    "month": 10,
+                    "amount": 31860
+                },
+                {
+                    "year": 2025,
+                    "month": 11,
+                    "amount": 31860
+                },
+                {
+                    "year": 2025,
+                    "month": 12,
+                    "amount": 31860
                 }
             ],
             "created_at": "2024-08-20T20:41:36Z",
@@ -61,11 +93,43 @@
             "workload_allocations": [
                 {
                     "year": 2025,
-                    "hours": 120
+                    "month": 7,
+                    "hours": 20
+                },
+                {
+                    "year": 2025,
+                    "month": 8,
+                    "hours": 20
+                },
+                {
+                    "year": 2025,
+                    "month": 9,
+                    "hours": 20
+                },
+                {
+                    "year": 2025,
+                    "month": 10,
+                    "hours": 20
+                },
+                {
+                    "year": 2025,
+                    "month": 11,
+                    "hours": 20
+                },
+                {
+                    "year": 2025,
+                    "month": 12,
+                    "hours": 20
                 },
                 {
                     "year": 2026,
-                    "hours": 40
+                    "month": 1,
+                    "hours": 20
+                },
+                {
+                    "year": 2026,
+                    "month": 2,
+                    "hours": 20
                 }
             ],
             "created_at": "2024-08-20T20:41:36Z",

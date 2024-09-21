@@ -194,6 +194,7 @@ type budgetOutput struct {
 
 type budgetAllocationOutput struct {
 	Year   int     `json:"year"`
+	Month  int     `json:"month"`
 	Amount float64 `json:"amount"`
 }
 
@@ -211,5 +212,6 @@ type workloadOutput struct {
 
 type workloadAllocationOutput struct {
 	Year  int `json:"year"`
+	Month int `json:"month"`
 	Hours int `json:"hours"`
 }
