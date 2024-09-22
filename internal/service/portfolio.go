@@ -35,7 +35,12 @@ func (s *EstimationService) GetPortfolio(ctx context.Context, input GetPortfolio
 			return nil, err
 		}
 
-		budgetsOutput[i] = mapper.BudgetOutputFromDb(db.BudgetRow(budget), allocations)
+		yearlyAllocations, err := s.queries.FindBudgetAllocationsGroupedByYear(ctx, budget.BudgetID)
+		if err != nil {
+			return nil, err
+		}
+
+		budgetsOutput[i] = mapper.BudgetOutputFromDb(db.BudgetRow(budget), allocations, yearlyAllocations)
 	}
 	portfolioOutput.Budgets = budgetsOutput
 
@@ -52,7 +57,12 @@ func (s *EstimationService) GetPortfolio(ctx context.Context, input GetPortfolio
 			return nil, err
 		}
 
-		workloadsOutput[i] = mapper.WorkloadOutputFromDb(db.WorkloadRow(workload), allocations)
+		yearlyAllocations, err := s.queries.FindWorkloadAllocationsGroupedByYear(ctx, workload.WorkloadID)
+		if err != nil {
+			return nil, err
+		}
+
+		workloadsOutput[i] = mapper.WorkloadOutputFromDb(db.WorkloadRow(workload), allocations, yearlyAllocations)
 	}
 	portfolioOutput.Workloads = workloadsOutput
 

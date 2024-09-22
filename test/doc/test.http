@@ -122,7 +122,7 @@ Content-Type: application/json
     "cost_type": "one_time",
     "description": "Mão de obra do PO",
     "comment": "estimativa do PO",
-    "amount": 180000,
+    "amount": 360000,
     "currency": "BRL",
     "tax": 0.00,
     "apply_inflation": true,
@@ -147,14 +147,44 @@ Content-Type: application/json
             "month": 4,            
             "amount": 30000
         },
-                {
+        {
             "year": 2024,
             "month": 5,            
             "amount": 30000
         },
-                {
+        {
             "year": 2024,
             "month": 6,            
+            "amount": 30000
+        },
+                {
+            "year": 2024,
+            "month": 7,            
+            "amount": 30000
+        },
+        {
+            "year": 2024,
+            "month": 8,            
+            "amount": 30000
+        },
+        {
+            "year": 2024,
+            "month": 9,            
+            "amount": 30000
+        },
+                {
+            "year": 2024,
+            "month": 10,            
+            "amount": 30000
+        },
+                {
+            "year": 2024,
+            "month": 11,            
+            "amount": 30000
+        },
+                {
+            "year": 2024,
+            "month": 12,            
             "amount": 30000
         }
     ]
@@ -171,17 +201,17 @@ Content-Type: application/json
     "comment": "estimativa de consultoria externa",
     "amount": 80000,
     "currency": "EUR",
-    "tax": 23.10,
+    "tax": 23.00,
     "apply_inflation": false,
     "cost_allocations": [
         {
             "year": 2024,
-            "month": 4,            
+            "month": 6,            
             "amount": 30000
         },
         {
             "year": 2024,
-            "month": 6,            
+            "month": 7,            
             "amount": 50000
         }
     ]
@@ -222,7 +252,7 @@ Content-Type: application/json
 {
     "competence_id": "{{ competenceId }}",
     "comment": "considerado a Simone na atividade",
-    "hours":    160,
+    "hours":    240,
     "effort_allocations": [
         {
             "year": 2024,
@@ -262,6 +292,26 @@ Content-Type: application/json
         {
             "year": 2024,
             "month": 8,
+            "hours": 20
+        },
+                {
+            "year": 2024,
+            "month": 9,
+            "hours": 20
+        },
+                {
+            "year": 2024,
+            "month": 10,
+            "hours": 20
+        },
+                {
+            "year": 2024,
+            "month": 11,
+            "hours": 20
+        },
+                {
+            "year": 2024,
+            "month": 12,
             "hours": 20
         }
     ]

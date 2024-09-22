@@ -1,0 +1,326 @@
+###
+# @name createManager
+POST http://localhost:9000/api/v1/users
+Content-Type: application/json
+
+{
+    "email": "john.doe@userland.com",
+    "user_name": "john1234",
+    "name": "John Doe",
+    "user_type": "manager"
+}
+
+###
+# @name createEstimator
+POST http://localhost:9000/api/v1/users
+Content-Type: application/json
+
+{
+    "email": "marie.doe1110@userland.com",
+    "user_name": "marie123",
+    "name": "Marie Doe",
+    "user_type": "estimator"
+}
+
+### 
+# @name createCompetence
+POST http://localhost:9000/api/v1/competences
+Content-Type: application/json
+
+{
+    "code": "Tech Doc",
+    "name": "Technical Documentation"
+}
+
+@managerId = {{ createManager.response.body.user_id }}
+@estimatorId = {{ createEstimator.response.body.user_id }}
+@competenceId = {{ createCompetence.response.body.competence_id }}
+
+###
+# @name createBaseline
+POST http://localhost:9000/api/v1/baselines
+Content-Type: application/json
+
+{
+    "code": "RIT123456789",
+    "review": 1,
+    "title": "Logistics Cost & Time Management",
+    "description": "This project will streamline our internal processes and increase overall efficiency",
+    "start_month": 1,
+    "start_year": 2024,
+    "duration": 12,
+    "manager_id": "{{ managerId }}",
+    "estimator_id": "{{ estimatorId }}"
+}
+
+@baselineId = {{ createBaseline.response.body.baseline_id }}
+
+###
+# @name createCostPO
+POST http://localhost:9000/api/v1/baselines/{{ baselineId }}/costs
+Content-Type: application/json
+
+{
+    "cost_type": "one_time",
+    "description": "Mão de obra do PO",
+    "comment": "estimativa do PO",
+    "amount": 360000,
+    "currency": "BRL",
+    "tax": 0.00,
+    "apply_inflation": true,
+    "cost_allocations": [
+        {
+            "year": 2024,
+            "month": 1,            
+            "amount": 30000
+        },
+        {
+            "year": 2024,
+            "month": 2,            
+            "amount": 30000
+        },
+        {
+            "year": 2024,
+            "month": 3,            
+            "amount": 30000
+        },
+        {
+            "year": 2024,
+            "month": 4,            
+            "amount": 30000
+        },
+        {
+            "year": 2024,
+            "month": 5,            
+            "amount": 30000
+        },
+        {
+            "year": 2024,
+            "month": 6,            
+            "amount": 30000
+        },
+                {
+            "year": 2024,
+            "month": 7,            
+            "amount": 30000
+        },
+        {
+            "year": 2024,
+            "month": 8,            
+            "amount": 30000
+        },
+        {
+            "year": 2024,
+            "month": 9,            
+            "amount": 30000
+        },
+                {
+            "year": 2024,
+            "month": 10,            
+            "amount": 30000
+        },
+                {
+            "year": 2024,
+            "month": 11,            
+            "amount": 30000
+        },
+                {
+            "year": 2024,
+            "month": 12,            
+            "amount": 30000
+        }
+    ]
+}
+ 
+###
+# @name createCostConsulting
+POST http://localhost:9000/api/v1/baselines/{{ baselineId }}/costs
+Content-Type: application/json
+
+{
+    "cost_type": "one_time",
+    "description": "External Consulting",
+    "comment": "estimativa de consultoria externa",
+    "amount": 80000,
+    "currency": "EUR",
+    "tax": 23.00,
+    "apply_inflation": false,
+    "cost_allocations": [
+        {
+            "year": 2024,
+            "month": 6,            
+            "amount": 30000
+        },
+        {
+            "year": 2024,
+            "month": 7,            
+            "amount": 50000
+        }
+    ]
+}
+
+###
+# @name createEffort
+POST http://localhost:9000/api/v1/baselines/{{ baselineId }}/efforts
+Content-Type: application/json
+
+{
+    "competence_id": "{{ competenceId }}",
+    "comment": "considerado a Simone na atividade",
+    "hours":    240,
+    "effort_allocations": [
+        {
+            "year": 2024,
+            "month": 1,
+            "hours": 20
+        },
+        {
+            "year": 2024,
+            "month": 2,
+            "hours": 20
+        },
+        {
+            "year": 2024,
+            "month": 3,
+            "hours": 20
+        },
+        {
+            "year": 2024,
+            "month": 4,
+            "hours": 20
+        },
+        {
+            "year": 2024,
+            "month": 5,
+            "hours": 20
+        },
+        {
+            "year": 2024,
+            "month": 6,
+            "hours": 20
+        },
+        {
+            "year": 2024,
+            "month": 7,
+            "hours": 20
+        },
+        {
+            "year": 2024,
+            "month": 8,
+            "hours": 20
+        },
+                {
+            "year": 2024,
+            "month": 9,
+            "hours": 20
+        },
+                {
+            "year": 2024,
+            "month": 10,
+            "hours": 20
+        },
+                {
+            "year": 2024,
+            "month": 11,
+            "hours": 20
+        },
+                {
+            "year": 2024,
+            "month": 12,
+            "hours": 20
+        }
+    ]
+}
+
+@effortId = {{ createEffort.response.body.effort_id }}
+
+###
+# @name createPlanFC03
+POST http://localhost:9000/api/v1/plans
+Content-Type: application/json
+
+{
+    "code": "FC 03 2025",
+    "name": "Forecast 03 2025",
+    "assumptions": [
+        {
+            "year": 2024,
+            "inflation": 4.00,
+            "currencies": [
+                {
+                    "currency": "USD",
+                    "exchange": 4.50
+                },
+                {
+                    "currency": "EUR",
+                    "exchange": 5.50
+                }
+            ]
+        },
+        {
+            "year": 2025,
+            "inflation": 5.20,
+            "currencies": [
+                {
+                    "currency": "USD",
+                    "exchange": 5.00
+                },
+                {
+                    "currency": "EUR",
+                    "exchange": 6.00
+                }
+            ]
+        },
+        {
+            "year": 2026,
+            "inflation": 5.26,
+            "currencies": [
+                {
+                    "currency": "USD",
+                    "exchange": 5.55
+                },
+                {
+                    "currency": "EUR",
+                    "exchange": 6.66
+                }
+            ]
+        },
+        {
+            "year": 2027,
+            "inflation": 5.30,
+            "currencies": [
+                {
+                    "currency": "USD",
+                    "exchange": 5.77
+                },
+                {
+                    "currency": "EUR",
+                    "exchange": 6.88
+                }
+            ]
+        }
+    ]
+}
+
+@planIdFC03 = {{ createPlanFC03.response.body.plan_id }}
+
+###
+# @name createPortfolioFC03
+POST http://localhost:9000/api/v1/portfolios
+Content-Type: application/json
+
+{
+    "baseline_id": "{{ baselineId }}",
+    "plan_id": "{{ planIdFC03 }}",
+    "shift_months": 11
+}
+
+@portfolioIdFC03 = {{ createPortfolioFC03.response.body.portfolio_id }}
+
+###
+# @name getPortfolioFC03
+GET http://localhost:9000/api/v1/portfolios/{{ portfolioIdFC03 }}
+
+###
+# @name deletePortfolioFC03
+DELETE http://localhost:9000/api/v1/portfolios/{{ portfolioIdFC03 }}
